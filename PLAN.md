@@ -40,9 +40,9 @@ Goal: a deployed "hello world" Astro site at `mutual-aid-phoenix.pages.dev`, pub
 - [x] Add `wrangler` as a dev dep: `pnpm add -D wrangler`. Then `pnpm wrangler login`.
 - [ ] Add baseline files: `README.md`, `LICENSE` (MIT), `.editorconfig`, `.gitignore`, `.nvmrc`.
 - [x] First deploy: `pnpm build && pnpm wrangler pages deploy ./dist --project-name=mutual-aid-phoenix`. The first run creates the Pages project.
-- [x] Add `"deploy": "pnpm build && wrangler pages deploy ./dist"` to `package.json` scripts. Every subsequent deploy is `pnpm deploy`.
+- [x] Add `"deploy": "pnpm build && wrangler pages deploy ./dist"` to `package.json` scripts. Every subsequent deploy is `pnpm ship`.
 
-**Exit criteria:** `pnpm deploy` publishes a hello-world Astro page to `mutual-aid-phoenix.pages.dev` over HTTPS.
+**Exit criteria:** `pnpm ship` publishes a hello-world Astro page to `mutual-aid-phoenix.pages.dev` over HTTPS.
 
 ---
 
@@ -72,7 +72,7 @@ Goal: a fully functional, accessible listings page — the fallback surface for 
 - [x] Each listing card shows: name, type tags, description, hours (human-formatted from the structured data), address (links to Google Maps directions via the no-key `/maps/search/?api=1&query=…` URL).
 - [x] Sort: alphabetical by default. Leave sort-by-nearest as a future hook.
 - [x] "Last verified" date shown on each card; visually dim listings older than 90 days.
-- [ ] Keyboard-navigable filter chips, proper heading hierarchy, semantic list markup.
+- [x] Keyboard-navigable filter chips, proper heading hierarchy, semantic list markup.
 
 **Exit criteria:** The list view is fully usable with keyboard only and with VoiceOver. `axe` CLI reports zero violations.
 
@@ -82,25 +82,25 @@ Goal: a fully functional, accessible listings page — the fallback surface for 
 
 Goal: the headline discovery surface, with accessibility parity the reference site lacks. Tile pipeline is manual for v1; cron automation deferred.
 
-- [ ] **Tile pipeline (manual for v1):**
-  - [ ] `pnpm wrangler r2 bucket create phoenix-metro-tiles` — create the bucket.
-  - [ ] Enable public read access (CF dashboard, or `pnpm wrangler r2 bucket update --public`).
-  - [ ] Download the latest Protomaps daily global `.pmtiles` build.
-  - [ ] `pmtiles extract global.pmtiles phoenix-metro.pmtiles --bbox=<lon_min>,<lat_min>,<lon_max>,<lat_max>` — clip to metro (~200–400 MB output).
-  - [ ] `pnpm wrangler r2 object put phoenix-metro-tiles/phoenix-metro.pmtiles --file phoenix-metro.pmtiles` — upload.
-  - [ ] Document this sequence in CONTRIBUTING.md so anyone can refresh manually until we automate.
-- [ ] Wire MapLibre GL JS to read tiles from R2 via the `pmtiles://` protocol adapter.
-- [ ] Custom SVG pins for each `type` (distro / fridge / free-table / meals / other). Ship as static assets in `/public/media/`.
-- [ ] Build the map view page at `/[locale]/map/`:
+- [x] **Tile pipeline (manual for v1):**
+  - [x] `pnpm wrangler r2 bucket create phoenix-metro-tiles` — create the bucket.
+  - [x] Enable public read access (CF dashboard, or `pnpm wrangler r2 bucket update --public`).
+  - [x] Download the latest Protomaps daily global `.pmtiles` build.
+  - [x] `pmtiles extract global.pmtiles phoenix-metro.pmtiles --bbox=<lon_min>,<lat_min>,<lon_max>,<lat_max>` — clip to metro (~200–400 MB output).
+  - [x] `pnpm wrangler r2 object put phoenix-metro-tiles/phoenix-metro.pmtiles --file phoenix-metro.pmtiles` — upload.
+  - [x] Document this sequence in CONTRIBUTING.md so anyone can refresh manually until we automate.
+- [x] Wire MapLibre GL JS to read tiles from R2 via the `pmtiles://` protocol adapter.
+- [x] Custom SVG pins for each `type` (distro / fridge / free-table / meals / other). Ship as static assets in `/public/media/`.
+- [x] Build the map view page at `/[locale]/map/`:
   - Map container with legend overlay.
   - Pins rendered from the same content collection as the list view.
   - Click a pin → popup with name, description snippet, hours, address, and a **"See full details in list"** link anchoring to that listing's ID on the list page.
-- [ ] **Accessibility (non-negotiable):**
-  - [ ] Skip-map link before the map for keyboard users.
-  - [ ] A "View as list" button prominently placed on the map page.
-  - [ ] Pins have accessible names; popups are focus-trapped and dismissible via Esc.
-  - [ ] `<noscript>` block inside the map container that directs users to the list view.
-- [ ] Default viewport frames the Greater Phoenix metro.
+- [x] **Accessibility (non-negotiable):**
+  - [x] Skip-map link before the map for keyboard users.
+  - [x] A "View as list" button prominently placed on the map page.
+  - [x] Pins have accessible names; popups are focus-trapped and dismissible via Esc.
+  - [x] `<noscript>` block inside the map container that directs users to the list view.
+- [x] Default viewport frames the Greater Phoenix metro.
 
 **Exit criteria:** Map loads under 2s on mid-tier mobile over 4G. Keyboard-only user can reach every listing on the map. `<noscript>` fallback works.
 
@@ -131,7 +131,7 @@ Goal: volunteers can add/edit listings and page content from a browser without t
   - **Listings** — maps to `src/content/listings/`, form fields mirror the Zod schema, commits default to PR workflow (Decap editorial workflow).
   - **Pages** — Home and Accessibility Statement, commits direct to `main`.
   - **Translations** — `src/i18n/*.json`, with Decap's i18n mode enabled for per-locale editing.
-- [ ] `pnpm deploy`; verify the OAuth flow end-to-end: visit `/admin/`, sign in with GitHub, open and save a listing.
+- [ ] `pnpm ship`; verify the OAuth flow end-to-end: visit `/admin/`, sign in with GitHub, open and save a listing.
 - [ ] **Build the geocoding helper page** at `public/admin/geocode.html`:
   - [ ] Plain HTML/JS, no framework. Linked from the Decap admin UI and from CONTRIBUTING.md.
   - [ ] Address input field.
@@ -140,10 +140,10 @@ Goal: volunteers can add/edit listings and page content from a browser without t
   - [ ] Displays the validated `lat`, `lng` values ready to copy into the Decap listing form.
   - [ ] Fallback affordance: a "I'll enter coords manually" field so editors can paste in lat/lng from any source (Google Maps right-click, GPS reading, etc.).
   - Future upgrade path: reimplement as an inline custom widget via `CMS.registerWidget`. Noted in CONTRIBUTING.md as a wanted enhancement; out of scope for v1.
-- [ ] Test with a secondary GitHub account (not an owner) to confirm the full volunteer experience: sign in → add a new listing → use geocode helper → paste coords → save → PR opens. **Note:** until we wire up GitHub→Pages auto-deploys (deferred), someone with deploy access still needs to `pnpm deploy` for volunteer edits to go live.
+- [ ] Test with a secondary GitHub account (not an owner) to confirm the full volunteer experience: sign in → add a new listing → use geocode helper → paste coords → save → PR opens. **Note:** until we wire up GitHub→Pages auto-deploys (deferred), someone with deploy access still needs to `pnpm ship` for volunteer edits to go live.
 - [ ] Write `CONTRIBUTING.md` documenting: how to get access, the listings schema, moderation expectations, the geocode helper workflow, the manual tile refresh, the manual deploy step, and the note that Decap's config must stay in sync with the Zod schema.
 
-**Exit criteria:** A non-owner volunteer can sign in, create a new listing (including geocoding its address via the helper), open a PR. A maintainer's `pnpm deploy` publishes the change. The bbox check catches bad coordinates at build time.
+**Exit criteria:** A non-owner volunteer can sign in, create a new listing (including geocoding its address via the helper), open a PR. A maintainer's `pnpm ship` publishes the change. The bbox check catches bad coordinates at build time.
 
 ---
 
@@ -201,7 +201,7 @@ Goal: go from "it works" to "real people can rely on it."
 
 Pick these up after v1 is live. None are launch-blockers — each replaces manual work with CI.
 
-- **Repo → CF Pages GitHub integration** — auto-deploys on push to `main` plus preview URLs per PR. Replaces `pnpm deploy`. This is the natural first thing to turn on once volunteer editing is active, since otherwise a maintainer has to redeploy for every Decap commit to go live.
+- **Repo → CF Pages GitHub integration** — auto-deploys on push to `main` plus preview URLs per PR. Replaces `pnpm ship`. This is the natural first thing to turn on once volunteer editing is active, since otherwise a maintainer has to redeploy for every Decap commit to go live.
 - **`.github/workflows/refresh-tiles.yml`** — monthly cron that downloads Protomaps, runs `pmtiles extract`, uploads to R2, retains the previous version under a dated key. Opens an `ops`-labeled Issue on failure.
 - **`.github/workflows/ci.yml`** — axe-core + Playwright, Lighthouse CI, lychee link check on PRs.
 - **Pa11y weekly audit** — posts results to a GitHub Issue trend thread.
@@ -214,7 +214,7 @@ Pick these up after v1 is live. None are launch-blockers — each replaces manua
 
 | Phase | Key artifacts |
 |---|---|
-| 0 | Tools installed, repo, Astro scaffold, `pnpm deploy`, first deploy live |
+| 0 | Tools installed, repo, Astro scaffold, `pnpm ship`, first deploy live |
 | 1 | Zod schema, i18n config, seed listings, translation files |
 | 2 | List view page with filters + Pagefind search |
 | 3 | `.pmtiles` in R2 (uploaded manually), MapLibre map page with a11y fallbacks |
@@ -233,7 +233,7 @@ Pick these up after v1 is live. None are launch-blockers — each replaces manua
 
 ## Risks to watch
 
-- **Manual deploy + Decap commits.** Until the GitHub→Pages integration is turned on (deferred), Decap volunteer edits create commits but don't auto-publish — a maintainer has to `pnpm deploy`. Fine for pre-launch (the user is the only editor); becomes annoying once volunteers are active. Expect to promote the Pages integration from "deferred" to "done" soon after Phase 5.
+- **Manual deploy + Decap commits.** Until the GitHub→Pages integration is turned on (deferred), Decap volunteer edits create commits but don't auto-publish — a maintainer has to `pnpm ship`. Fine for pre-launch (the user is the only editor); becomes annoying once volunteers are active. Expect to promote the Pages integration from "deferred" to "done" soon after Phase 5.
 - **Protomaps tile extraction complexity.** First time through, budget a half-day. If it becomes a maintenance burden, swap to MapTiler free tier (no code change, just config).
 - **Spanish translation quality.** Machine translation is off the table for a trust-critical site. Line up a native-speaker reviewer before Phase 8.
 - **Listings going stale.** The `last_verified_date` field + the "report a problem" contact path are the mitigations; sustained volunteer stewardship is the real answer.

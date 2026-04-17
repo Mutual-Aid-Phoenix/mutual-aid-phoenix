@@ -1,0 +1,556 @@
+---
+import { getCollection } from "astro:content";
+import BaseLayout from "../../layouts/BaseLayout.astro";
+import { LOCALES, t, type Locale } from "../../i18n";
+import { RESOURCE_TYPES } from "../../content.config";
+import { formatSchedule } from "../../lib/format-schedule";
+
+export async function getStaticPaths() {
+  return LOCALES.map((locale) => ({ params: { locale } }));
+}
+
+const { locale } = Astro.params as { locale: Locale };
+
+const listings = await getCollection("listings");
+
+// Pre-format everything locale-specific on the server; the client script only
+// needs to position markers and stamp HTML into popups.
+const pinLabelTemplate = t(locale, "map.pin_label");
+
+const features = listings.map((listing) => {
+  const { data } = listing;
+  const primaryType = data.resource_type[0];
+  const primaryTypeLabel = t(locale, `resource_type.${primaryType}`);
+  const name = data.name[locale];
+  const formatted = formatSchedule(data.schedule, locale);
+  const hoursText =
+    formatted.kind === "text"
+      ? formatted.text
+      : formatted.rows.map((r) => `${r.label} ${r.time}`).join(" · ");
+  const address = [
+    data.address_1,
+    data.address_2,
+    `${data.city}, ${data.state} ${data.zip_code}`,
+  ]
+    .filter(Boolean)
+    .join(", ");
+
+  return {
+    id: listing.id,
+    name,
+    description: data.description[locale],
+    primary_type: primaryType,
+    aria_label: pinLabelTemplate
+      .replace("{type}", primaryTypeLabel)
+      .replace("{name}", name),
+    lat: data.lat,
+    lng: data.lng,
+    hours: hoursText,
+    address,
+    maps_url: `https://www.google.com/maps/search/?api=1&query=${data.lat},${data.lng}`,
+    list_anchor: `/${locale}/list/#listing-${listing.id}-heading`,
+  };
+});
+
+const strings = {
+  hours: t(locale, "listing.hours_label"),
+  address: t(locale, "listing.address_label"),
+  directions: t(locale, "listing.get_directions"),
+  see_details: t(locale, "map.see_full_details"),
+  close: t(locale, "map.close_popup"),
+  tile_error: t(locale, "map.tile_error"),
+};
+
+const legendItems = RESOURCE_TYPES.map((type) => ({
+  type,
+  label: t(locale, `resource_type.${type}`),
+}));
+
+// Public URL of the R2-hosted extract. Overridable at build time if we later
+// move to a custom domain (CF env var `PUBLIC_PMTILES_URL`).
+const pmtilesUrl =
+  import.meta.env.PUBLIC_PMTILES_URL ??
+  "https://pub-b22348f0c1bf485f98d9b78994e85638.r2.dev/phoenix-metro.pmtiles";
+
+// Greater Phoenix metro viewport. Mirrors the bbox in content.config.ts but
+// centered for an initial framing users will recognize.
+const viewport = {
+  center: [-112.07, 33.5] as [number, number],
+  zoom: 9,
+};
+
+const listUrl = `/${locale}/list/`;
+---
+
+<BaseLayout locale={locale} title={t(locale, "map.heading")}>
+  <a href="#map-skip-target" class="skip-map-link">
+    {t(locale, "map.skip_map")}
+  </a>
+
+  <div class="map-header">
+    <h1>{t(locale, "map.heading")}</h1>
+    <a class="view-as-list-btn" href={listUrl}>
+      {t(locale, "map.view_as_list")}
+    </a>
+  </div>
+
+  <div class="map-frame">
+    <div
+      id="map"
+      class="map-canvas"
+      data-pmtiles-url={pmtilesUrl}
+      data-center-lng={viewport.center[0]}
+      data-center-lat={viewport.center[1]}
+      data-zoom={viewport.zoom}
+    >
+      <noscript>
+        <div class="map-noscript">
+          <p>{t(locale, "map.noscript_fallback")}</p>
+          <a href={listUrl}>{t(locale, "map.view_as_list")}</a>
+        </div>
+      </noscript>
+    </div>
+
+    <div class="map-error" hidden data-map-error role="alert">
+      <p>{strings.tile_error}</p>
+      <a href={listUrl}>{t(locale, "map.view_as_list")}</a>
+    </div>
+
+    <section class="map-legend" aria-label={t(locale, "map.legend_label")}>
+      <h2 class="legend-title">{t(locale, "map.legend_label")}</h2>
+      <ul role="list">
+        {
+          legendItems.map((item) => (
+            <li>
+              <img
+                src={`/media/pins/${item.type}.svg`}
+                alt=""
+                width="20"
+                height="25"
+              />
+              <span>{item.label}</span>
+            </li>
+          ))
+        }
+      </ul>
+    </section>
+  </div>
+
+  <div id="map-skip-target" tabindex="-1"></div>
+
+  <script
+    type="application/json"
+    id="map-features"
+    is:inline
+    set:html={JSON.stringify(features)}
+  />
+  <script
+    type="application/json"
+    id="map-strings"
+    is:inline
+    set:html={JSON.stringify(strings)}
+  />
+</BaseLayout>
+
+<script>
+  import maplibregl from "maplibre-gl";
+  import { Protocol } from "pmtiles";
+  import layers from "protomaps-themes-base";
+  import "maplibre-gl/dist/maplibre-gl.css";
+
+  type Feature = {
+    id: string;
+    name: string;
+    description: string;
+    primary_type: string;
+    aria_label: string;
+    lat: number;
+    lng: number;
+    hours: string;
+    address: string;
+    maps_url: string;
+    list_anchor: string;
+  };
+
+  type Strings = {
+    hours: string;
+    address: string;
+    directions: string;
+    see_details: string;
+    close: string;
+    tile_error: string;
+  };
+
+  const mapEl = document.getElementById("map") as HTMLDivElement | null;
+  const errorEl = document.querySelector(
+    "[data-map-error]",
+  ) as HTMLDivElement | null;
+  const featuresEl = document.getElementById("map-features");
+  const stringsEl = document.getElementById("map-strings");
+  if (!mapEl || !featuresEl || !stringsEl) throw new Error("Map bootstrap missing");
+
+  const features = JSON.parse(featuresEl.textContent ?? "[]") as Feature[];
+  const strings = JSON.parse(stringsEl.textContent ?? "{}") as Strings;
+
+  const pmtilesUrl = mapEl.dataset.pmtilesUrl!;
+  const centerLng = parseFloat(mapEl.dataset.centerLng!);
+  const centerLat = parseFloat(mapEl.dataset.centerLat!);
+  const zoom = parseFloat(mapEl.dataset.zoom!);
+
+  // Register the pmtiles protocol so MapLibre can fetch range-requested
+  // tiles directly from the R2 object without a tile server.
+  const protocol = new Protocol();
+  maplibregl.addProtocol("pmtiles", protocol.tile);
+
+  let map: maplibregl.Map;
+  try {
+    map = new maplibregl.Map({
+      container: mapEl,
+      center: [centerLng, centerLat],
+      zoom,
+      // Keyboard users expect zoom/pan via keyboard — MapLibre default.
+      style: {
+        version: 8,
+        glyphs:
+          "https://protomaps.github.io/basemaps-assets/fonts/{fontstack}/{range}.pbf",
+        sprite: "https://protomaps.github.io/basemaps-assets/sprites/v4/light",
+        sources: {
+          protomaps: {
+            type: "vector",
+            url: `pmtiles://${pmtilesUrl}`,
+            attribution:
+              '<a href="https://protomaps.com" target="_blank" rel="noopener">Protomaps</a> © <a href="https://openstreetmap.org" target="_blank" rel="noopener">OpenStreetMap</a>',
+          },
+        },
+        layers: layers("protomaps", "light"),
+      },
+    });
+  } catch (err) {
+    console.error("Map init failed", err);
+    mapEl.hidden = true;
+    if (errorEl) errorEl.hidden = false;
+    throw err;
+  }
+
+  map.on("error", (e) => {
+    console.error("MapLibre error", e.error);
+    // Show the inline error only if tiles never loaded — other errors (e.g.
+    // missing glyph ranges) shouldn't kill the whole page.
+    if (!map.loaded() && errorEl) errorEl.hidden = false;
+  });
+
+  map.addControl(
+    new maplibregl.NavigationControl({ showCompass: false }),
+    "top-right",
+  );
+
+  const escape = (s: string) =>
+    s.replace(/[&<>"']/g, (c) =>
+      c === "&"
+        ? "&amp;"
+        : c === "<"
+          ? "&lt;"
+          : c === ">"
+            ? "&gt;"
+            : c === '"'
+              ? "&quot;"
+              : "&#39;",
+    );
+
+  const buildPopupHtml = (f: Feature) => `
+    <article class="listing-popup">
+      <h3>${escape(f.name)}</h3>
+      <p class="popup-desc">${escape(f.description)}</p>
+      <dl>
+        <dt>${escape(strings.hours)}</dt>
+        <dd>${escape(f.hours)}</dd>
+        <dt>${escape(strings.address)}</dt>
+        <dd><a href="${escape(f.maps_url)}" target="_blank" rel="noopener noreferrer">${escape(f.address)}</a></dd>
+      </dl>
+      <a class="popup-see-details" href="${escape(f.list_anchor)}">${escape(strings.see_details)} →</a>
+    </article>
+  `;
+
+  // Focus-trap a popup: Tab cycles inside, Shift+Tab wraps back, Esc closes
+  // and returns focus to the marker button that opened it.
+  const trapFocus = (
+    container: HTMLElement,
+    onEscape: () => void,
+  ): (() => void) => {
+    const handler = (e: KeyboardEvent) => {
+      if (e.key === "Escape") {
+        e.stopPropagation();
+        onEscape();
+        return;
+      }
+      if (e.key !== "Tab") return;
+      const focusables = container.querySelectorAll<HTMLElement>(
+        'a, button, [tabindex]:not([tabindex="-1"])',
+      );
+      if (focusables.length === 0) return;
+      const first = focusables[0];
+      const last = focusables[focusables.length - 1];
+      if (e.shiftKey && document.activeElement === first) {
+        e.preventDefault();
+        last.focus();
+      } else if (!e.shiftKey && document.activeElement === last) {
+        e.preventDefault();
+        first.focus();
+      }
+    };
+    container.addEventListener("keydown", handler);
+    return () => container.removeEventListener("keydown", handler);
+  };
+
+  const addMarkers = () => {
+    for (const f of features) {
+      const el = document.createElement("button");
+      el.type = "button";
+      el.className = `listing-pin pin-${f.primary_type}`;
+      el.setAttribute("aria-label", f.aria_label);
+      el.innerHTML = `<img src="/media/pins/${f.primary_type}.svg" alt="" width="32" height="40">`;
+
+      const popup = new maplibregl.Popup({
+        offset: 28,
+        closeButton: true,
+        closeOnClick: true,
+        maxWidth: "320px",
+        focusAfterOpen: true,
+      }).setHTML(buildPopupHtml(f));
+
+      const marker = new maplibregl.Marker({ element: el, anchor: "bottom" })
+        .setLngLat([f.lng, f.lat])
+        .setPopup(popup)
+        .addTo(map);
+
+      let releaseTrap: (() => void) | null = null;
+
+      popup.on("open", () => {
+        const container = popup.getElement();
+        if (!container) return;
+        // MapLibre's built-in close button needs an accessible name.
+        const closeBtn =
+          container.querySelector<HTMLButtonElement>(".maplibregl-popup-close-button");
+        if (closeBtn) closeBtn.setAttribute("aria-label", strings.close);
+        releaseTrap = trapFocus(container, () => popup.remove());
+      });
+
+      popup.on("close", () => {
+        if (releaseTrap) {
+          releaseTrap();
+          releaseTrap = null;
+        }
+        // Return focus to the marker that opened the popup.
+        marker.getElement().focus();
+      });
+    }
+  };
+
+  if (map.loaded()) addMarkers();
+  else map.once("load", addMarkers);
+</script>
+
+<style is:global>
+  /* MapLibre popup chrome — scoped via the .listing-popup descendant. */
+  .maplibregl-popup-content {
+    padding: 0.75rem 0.875rem 0.875rem;
+    border-radius: 6px;
+    font-family:
+      system-ui,
+      -apple-system,
+      sans-serif;
+  }
+
+  .maplibregl-popup-close-button {
+    font-size: 1.25rem;
+    padding: 0 0.375rem;
+    color: #333;
+  }
+
+  .maplibregl-popup-close-button:focus-visible {
+    outline: 2px solid #005fcc;
+    outline-offset: 2px;
+  }
+
+  .listing-popup h3 {
+    margin: 0 1.25rem 0.375rem 0;
+    font-size: 1rem;
+  }
+
+  .listing-popup .popup-desc {
+    margin: 0 0 0.625rem;
+    font-size: 0.875rem;
+    line-height: 1.4;
+  }
+
+  .listing-popup dl {
+    margin: 0 0 0.625rem;
+    display: grid;
+    grid-template-columns: auto 1fr;
+    column-gap: 0.5rem;
+    row-gap: 0.125rem;
+    font-size: 0.85rem;
+  }
+
+  .listing-popup dt {
+    font-weight: 600;
+  }
+
+  .listing-popup dd {
+    margin: 0;
+  }
+
+  .listing-popup .popup-see-details {
+    display: inline-block;
+    font-size: 0.875rem;
+    font-weight: 600;
+  }
+
+  .listing-pin {
+    appearance: none;
+    background: transparent;
+    border: 0;
+    padding: 0;
+    cursor: pointer;
+    display: block;
+    line-height: 0;
+    border-radius: 4px;
+  }
+
+  .listing-pin img {
+    display: block;
+    pointer-events: none;
+  }
+
+  .listing-pin:focus-visible {
+    outline: 3px solid #005fcc;
+    outline-offset: 2px;
+  }
+</style>
+
+<style>
+  .skip-map-link {
+    position: absolute;
+    left: -9999px;
+    top: auto;
+    width: 1px;
+    height: 1px;
+    overflow: hidden;
+  }
+
+  .skip-map-link:focus {
+    position: static;
+    width: auto;
+    height: auto;
+    display: inline-block;
+    margin: 0.5rem 1rem;
+    padding: 0.5rem 0.875rem;
+    background: #1f3d5c;
+    color: #fff;
+    text-decoration: none;
+    border-radius: 4px;
+  }
+
+  .map-header {
+    display: flex;
+    align-items: baseline;
+    gap: 1rem;
+    margin: 1.5rem 1rem 1rem;
+    flex-wrap: wrap;
+  }
+
+  .map-header h1 {
+    margin: 0;
+    font-size: 1.75rem;
+  }
+
+  .view-as-list-btn {
+    display: inline-block;
+    padding: 0.375rem 0.875rem;
+    background: #1f3d5c;
+    color: #fff;
+    text-decoration: none;
+    border-radius: 4px;
+    font-size: 0.9rem;
+    font-weight: 500;
+  }
+
+  .view-as-list-btn:focus-visible {
+    outline: 2px solid #005fcc;
+    outline-offset: 2px;
+  }
+
+  .map-frame {
+    position: relative;
+    margin: 0 1rem;
+    max-width: 64rem;
+  }
+
+  .map-canvas {
+    width: 100%;
+    height: 70vh;
+    min-height: 24rem;
+    border: 1px solid #888;
+    border-radius: 6px;
+    background: #f5f5f5;
+  }
+
+  .map-canvas:focus-visible {
+    outline: 3px solid #005fcc;
+    outline-offset: 2px;
+  }
+
+  .map-noscript {
+    padding: 1rem;
+    text-align: center;
+  }
+
+  .map-error {
+    margin-top: 0.75rem;
+    padding: 0.875rem 1rem;
+    border: 1px solid #c62828;
+    border-radius: 6px;
+    background: #fff5f5;
+    color: #7f1d1d;
+  }
+
+  .map-error a {
+    display: inline-block;
+    margin-top: 0.25rem;
+    font-weight: 600;
+  }
+
+  .map-legend {
+    margin-top: 0.75rem;
+    padding: 0.5rem 0.875rem 0.75rem;
+    border: 1px solid #d4d4d4;
+    border-radius: 6px;
+    background: #fff;
+  }
+
+  .legend-title {
+    margin: 0 0 0.375rem;
+    font-size: 0.9rem;
+    font-weight: 600;
+  }
+
+  .map-legend ul {
+    list-style: none;
+    padding: 0;
+    margin: 0;
+    display: flex;
+    flex-wrap: wrap;
+    gap: 0.5rem 1rem;
+  }
+
+  .map-legend li {
+    display: inline-flex;
+    align-items: center;
+    gap: 0.375rem;
+    font-size: 0.85rem;
+  }
+
+  #map-skip-target:focus {
+    outline: none;
+  }
+</style>

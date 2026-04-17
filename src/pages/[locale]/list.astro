@@ -394,6 +394,7 @@ const totalCount = listings.length;
   :root {
     --color-border: #d4d4d4;
     --color-border-strong: #888;
+    --color-text-muted: #555;
     --color-bg-muted: #f5f5f5;
     --color-tag-type: #1f3d5c;
     --color-tag-category: #4a4a4a;
@@ -501,7 +502,7 @@ const totalCount = listings.length;
   .results-count {
     margin: 0;
     font-size: 0.875rem;
-    color: #555;
+    color: var(--color-text-muted);
   }
 
   .empty-state {
@@ -509,7 +510,7 @@ const totalCount = listings.length;
     padding: 1rem;
     background: var(--color-bg-muted);
     border-radius: 6px;
-    color: #555;
+    color: var(--color-text-muted);
     max-width: 64rem;
   }
 
@@ -541,7 +542,7 @@ const totalCount = listings.length;
 
   .location-name {
     margin: 0 0 0.75rem;
-    color: var(--color-border-strong);
+    color: var(--color-text-muted);
     font-size: 0.9rem;
   }
 
@@ -617,7 +618,7 @@ const totalCount = listings.length;
   .verified {
     margin: 0.75rem 0 0;
     font-size: 0.85rem;
-    color: #555;
+    color: var(--color-text-muted);
   }
 
   .stale-badge {

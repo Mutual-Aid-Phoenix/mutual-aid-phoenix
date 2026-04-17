@@ -78,6 +78,17 @@
     "showing_count_one": "Showing {count} resource",
     "showing_count_other": "Showing {count} resources"
   },
+  "map": {
+    "heading": "Map",
+    "skip_map": "Skip the map",
+    "view_as_list": "View as list",
+    "legend_label": "Legend",
+    "close_popup": "Close",
+    "see_full_details": "See full details in list",
+    "pin_label": "{type} — {name}",
+    "noscript_fallback": "The interactive map requires JavaScript. You can browse every resource on the list view.",
+    "tile_error": "The map failed to load. You can browse every resource on the list view."
+  },
   "ordinal_week": {
     "1": "1st",
     "2": "2nd",

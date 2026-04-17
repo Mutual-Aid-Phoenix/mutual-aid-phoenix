@@ -10,10 +10,13 @@
     "build": "astro build && pagefind --site dist",
     "preview": "astro preview",
     "astro": "astro",
-    "deploy": "pnpm build && wrangler pages deploy ./dist"
+    "ship": "pnpm build && wrangler pages deploy ./dist"
   },
   "dependencies": {
     "astro": "^6.1.7",
+    "maplibre-gl": "^5.23.0",
+    "pmtiles": "^4.4.1",
+    "protomaps-themes-base": "^4.5.0",
     "wrangler": "^4.83.0"
   },
   "devDependencies": {

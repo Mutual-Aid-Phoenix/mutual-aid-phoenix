@@ -78,6 +78,17 @@
     "showing_count_one": "Mostrando {count} recurso",
     "showing_count_other": "Mostrando {count} recursos"
   },
+  "map": {
+    "heading": "Mapa",
+    "skip_map": "Saltar el mapa",
+    "view_as_list": "Ver como lista",
+    "legend_label": "Leyenda",
+    "close_popup": "Cerrar",
+    "see_full_details": "Ver detalles completos en la lista",
+    "pin_label": "{type} — {name}",
+    "noscript_fallback": "El mapa interactivo requiere JavaScript. Puedes explorar todos los recursos en la vista de lista.",
+    "tile_error": "No se pudo cargar el mapa. Puedes explorar todos los recursos en la vista de lista."
+  },
   "ordinal_week": {
     "1": "1er",
     "2": "2do",

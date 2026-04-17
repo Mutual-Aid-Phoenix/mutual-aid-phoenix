@@ -1,0 +1,18 @@
+{
+  "rules": [
+    {
+      "allowed": {
+        "origins": [
+          "http://localhost:4321",
+          "http://127.0.0.1:4321",
+          "https://mutual-aid-phoenix.pages.dev",
+          "https://*.mutual-aid-phoenix.pages.dev"
+        ],
+        "methods": ["GET", "HEAD"],
+        "headers": ["Range", "If-Match", "If-None-Match", "If-Range"]
+      },
+      "exposeHeaders": ["Content-Length", "Content-Range", "ETag", "Accept-Ranges"],
+      "maxAgeSeconds": 3600
+    }
+  ]
+}

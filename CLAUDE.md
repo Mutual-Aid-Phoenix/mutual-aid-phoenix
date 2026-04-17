@@ -46,7 +46,7 @@ When a field, enum value, or invariant changes, update DATA_MODEL.md first, then
 - **Package manager:** pnpm (enabled via corepack — `corepack enable && corepack prepare pnpm@latest --activate`). All commands use `pnpm` / `pnpm dlx`, never `npm` / `npx`.
 - **Node:** 22 (current LTS; pinned via `.nvmrc`).
 - **Wrangler:** installed as a dev dependency (`pnpm add -D wrangler`), run via `pnpm wrangler …`. Not installed globally.
-- **Deploys (v1):** manual from laptop via `pnpm deploy` (`pnpm build && wrangler pages deploy ./dist`). GitHub → Pages auto-deploy is intentionally deferred until after Phase 5 — see PLAN.md's "Deferred automation" section.
+- **Deploys (v1):** manual from laptop via `pnpm ship` (`pnpm build && wrangler pages deploy ./dist`). GitHub → Pages auto-deploy is intentionally deferred until after Phase 5 — see PLAN.md's "Deferred automation" section.
 - **Secrets:** stored as encrypted Cloudflare Pages env vars via `pnpm wrangler pages secret put …`. Never committed. Two distinct GitHub integrations: an OAuth App for volunteer CMS login, and a separate GitHub App for server-side Issue creation from the contact form.
 
 ## Working on this project

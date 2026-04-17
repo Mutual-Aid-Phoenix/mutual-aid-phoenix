@@ -2,9 +2,14 @@
 dist/
 # generated types
 .astro/
+# wrangler local state
+.wrangler/
 
 # dependencies
 node_modules/
+
+# local pmtiles extracts — too large for git; uploaded to R2 instead
+*.pmtiles
 
 # logs
 npm-debug.log*
