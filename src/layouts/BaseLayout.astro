@@ -1,0 +1,50 @@
+---
+import { LOCALES, DEFAULT_LOCALE, t, type Locale } from "../i18n";
+
+interface Props {
+  locale: Locale;
+  title: string;
+  description?: string;
+}
+
+const { locale, title, description } = Astro.props;
+
+// Build per-locale canonical URLs for hreflang. Replaces the current locale
+// segment (`/en/...`) with each alternative. `x-default` points at the
+// default locale — search engines treat it as the language-neutral URL.
+const pathname = Astro.url.pathname;
+const site = Astro.site ?? new URL(Astro.url.origin);
+
+function altUrl(altLocale: Locale): string {
+  const altPath = pathname.replace(
+    new RegExp(`^/${locale}(/|$)`),
+    `/${altLocale}$1`,
+  );
+  return new URL(altPath, site).toString();
+}
+---
+
+<!doctype html>
+<html lang={locale}>
+  <head>
+    <meta charset="utf-8" />
+    <meta name="viewport" content="width=device-width,initial-scale=1" />
+    <meta name="generator" content={Astro.generator} />
+    <title>{title}</title>
+    {description && <meta name="description" content={description} />}
+    {
+      LOCALES.map((alt) => (
+        <link rel="alternate" hreflang={alt} href={altUrl(alt)} />
+      ))
+    }
+    <link rel="alternate" hreflang="x-default" href={altUrl(DEFAULT_LOCALE)} />
+  </head>
+  <body>
+    <a href="#main-content" class="skip-link">
+      {t(locale, "chrome.skip_to_content")}
+    </a>
+    <main id="main-content">
+      <slot />
+    </main>
+  </body>
+</html>

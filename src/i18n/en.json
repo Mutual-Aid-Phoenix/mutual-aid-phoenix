@@ -1,0 +1,66 @@
+{
+  "site": {
+    "name": "Mutual Aid in Phoenix",
+    "tagline": "Dignified, no-gatekeeping resources across the Greater Phoenix metro."
+  },
+  "nav": {
+    "home": "Home",
+    "map": "Map",
+    "list": "List",
+    "contact": "Contact",
+    "accessibility": "Accessibility"
+  },
+  "chrome": {
+    "skip_to_content": "Skip to main content",
+    "toggle_dark_mode": "Toggle dark mode",
+    "language_switcher_label": "Language",
+    "language_name": "English"
+  },
+  "region": {
+    "central-phoenix": "Central Phoenix",
+    "north-phoenix": "North Phoenix",
+    "south-phoenix": "South Phoenix",
+    "east-valley": "East Valley",
+    "west-valley": "West Valley"
+  },
+  "resource_type": {
+    "distro": "Distro",
+    "fridge": "Community fridge",
+    "free-table": "Free table",
+    "meals": "Meals",
+    "resource-center": "Resource center",
+    "other": "Other"
+  },
+  "category": {
+    "food": "Food",
+    "harm-reduction": "Harm reduction",
+    "medical": "Medical",
+    "transportation": "Transportation",
+    "hygiene": "Hygiene",
+    "clothing": "Clothing",
+    "shelter": "Shelter",
+    "other": "Other"
+  },
+  "day_short": {
+    "mon": "Mon",
+    "tue": "Tue",
+    "wed": "Wed",
+    "thu": "Thu",
+    "fri": "Fri",
+    "sat": "Sat",
+    "sun": "Sun"
+  },
+  "schedule": {
+    "always-open": "Always open",
+    "by-appointment": "By appointment",
+    "one-off": "One-time event",
+    "recurring": "Recurring"
+  },
+  "listing": {
+    "last_verified": "Last verified",
+    "get_directions": "Get directions",
+    "barriers_to_entry": "Requirements",
+    "accessibility_notes": "Accessibility",
+    "languages_spoken": "Languages spoken"
+  }
+}

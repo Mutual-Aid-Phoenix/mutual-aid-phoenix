@@ -50,12 +50,12 @@ Goal: a deployed "hello world" Astro site at `mutual-aid-phoenix.pages.dev`, pub
 
 Goal: define the data shape once, so every subsequent phase reads from it.
 
-- [ ] Define an Astro Content Collection `listings/` with a Zod schema matching the shape in [DATA_MODEL.md](./DATA_MODEL.md). Store listings as Markdown files with YAML frontmatter under `src/content/listings/`.
-- [ ] Encode the build-time invariants from DATA_MODEL.md as Zod refinements — including the Greater Phoenix metro bounding-box check on `lat`/`lng`, unique `slug`, required `cadence_data` when `schedule.kind === "recurring"`, and i18n completeness for every `*` field across launch locales.
-- [ ] Create `src/content/pages/` for editable page content (Home, Accessibility Statement) as Markdown with frontmatter.
-- [ ] Create `src/i18n/en.json` and `src/i18n/es.json` for UI strings. Convention: **no hardcoded user-facing strings in `.astro` components** — everything routes through the translation files.
-- [ ] Configure Astro i18n routing: `/en/…` and `/es/…`, default locale `en`, redirect `/` → `/en/`. Add `hreflang` tags to the base layout.
-- [ ] Seed ~10 test listings (real sites if possible — Share Food Program, a couple of community fridges) so subsequent phases have something to render. Geocode by hand for now; the helper page in Phase 5 replaces this.
+- [x] Define an Astro Content Collection `listings/` with a Zod schema matching the shape in [DATA_MODEL.md](./DATA_MODEL.md). Store listings as Markdown files with YAML frontmatter under `src/content/listings/`.
+- [x] Encode the build-time invariants from DATA_MODEL.md as Zod refinements — including the Greater Phoenix metro bounding-box check on `lat`/`lng`, required `weekly` or `monthly` cadence when `schedule.kind === "recurring"`, and i18n completeness for every `*` field across launch locales. Slug uniqueness is guaranteed by the filesystem (slug = filename stem).
+- [x] Create `src/content/pages/` for editable page content (Home, Accessibility Statement) as Markdown with frontmatter. Structure: `src/content/pages/{locale}/{page-slug}.md`.
+- [x] Create `src/i18n/en.json` and `src/i18n/es.json` for UI strings. Convention: **no hardcoded user-facing strings in `.astro` components** — everything routes through the translation files. A small `t(locale, key)` helper in `src/i18n/index.ts` resolves dotted keys and throws loudly on missing strings.
+- [x] Configure Astro i18n routing: `/en/…` and `/es/…`, default locale `en`, redirect `/` → `/en/` (meta-refresh for v1; HTTP 301 via Cloudflare Pages `_redirects` tracked in Deferred automation). `hreflang` tags (plus `x-default`) emitted from the base layout.
+- [x] Seed ~10 test listings covering all 5 regions, all 6 resource types, and all 4 `schedule.kind` variants (plus both weekly and monthly recurring branches). These are clearly fixtures — real verified listings come in Phase 8.
 
 **Exit criteria:** `pnpm build` succeeds with the schema enforced. Broken listings (including out-of-bbox coordinates) fail the build with a clear error.
 
@@ -206,6 +206,7 @@ Pick these up after v1 is live. None are launch-blockers — each replaces manua
 - **`.github/workflows/ci.yml`** — axe-core + Playwright, Lighthouse CI, lychee link check on PRs.
 - **Pa11y weekly audit** — posts results to a GitHub Issue trend thread.
 - **Renovate (or Dependabot)** — weekly dependency updates.
+- **Upgrade `/` → `/en/` redirect to a proper HTTP 301** via a `public/_redirects` file (`/` → `/en/` with status `301`). Astro currently generates a meta-refresh HTML page at `/`, which works on any host but is slightly slower and less SEO-friendly than a real redirect. Cloudflare Pages reads Netlify-style `_redirects` natively, so this is a one-file change.
 
 ---
 

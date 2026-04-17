@@ -1,0 +1,66 @@
+{
+  "site": {
+    "name": "Ayuda Mutua en Phoenix",
+    "tagline": "Recursos dignos y sin barreras en el área metropolitana de Phoenix."
+  },
+  "nav": {
+    "home": "Inicio",
+    "map": "Mapa",
+    "list": "Lista",
+    "contact": "Contacto",
+    "accessibility": "Accesibilidad"
+  },
+  "chrome": {
+    "skip_to_content": "Saltar al contenido principal",
+    "toggle_dark_mode": "Alternar modo oscuro",
+    "language_switcher_label": "Idioma",
+    "language_name": "Español"
+  },
+  "region": {
+    "central-phoenix": "Centro de Phoenix",
+    "north-phoenix": "Norte de Phoenix",
+    "south-phoenix": "Sur de Phoenix",
+    "east-valley": "Este del Valle",
+    "west-valley": "Oeste del Valle"
+  },
+  "resource_type": {
+    "distro": "Distribución",
+    "fridge": "Nevera comunitaria",
+    "free-table": "Mesa gratuita",
+    "meals": "Comidas",
+    "resource-center": "Centro de recursos",
+    "other": "Otro"
+  },
+  "category": {
+    "food": "Comida",
+    "harm-reduction": "Reducción de daños",
+    "medical": "Atención médica",
+    "transportation": "Transporte",
+    "hygiene": "Higiene",
+    "clothing": "Ropa",
+    "shelter": "Refugio",
+    "other": "Otro"
+  },
+  "day_short": {
+    "mon": "Lun",
+    "tue": "Mar",
+    "wed": "Mié",
+    "thu": "Jue",
+    "fri": "Vie",
+    "sat": "Sáb",
+    "sun": "Dom"
+  },
+  "schedule": {
+    "always-open": "Siempre abierto",
+    "by-appointment": "Con cita previa",
+    "one-off": "Evento único",
+    "recurring": "Recurrente"
+  },
+  "listing": {
+    "last_verified": "Verificado por última vez",
+    "get_directions": "Cómo llegar",
+    "barriers_to_entry": "Requisitos",
+    "accessibility_notes": "Accesibilidad",
+    "languages_spoken": "Idiomas hablados"
+  }
+}
