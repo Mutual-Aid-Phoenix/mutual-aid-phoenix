@@ -1,5 +1,6 @@
 ---
 import { LOCALES, DEFAULT_LOCALE, t, type Locale } from "../i18n";
+import "../styles/global.css";
 
 interface Props {
   locale: Locale;
@@ -9,19 +10,53 @@ interface Props {
 
 const { locale, title, description } = Astro.props;
 
-// Build per-locale canonical URLs for hreflang. Replaces the current locale
-// segment (`/en/...`) with each alternative. `x-default` points at the
-// default locale — search engines treat it as the language-neutral URL.
 const pathname = Astro.url.pathname;
 const site = Astro.site ?? new URL(Astro.url.origin);
 
-function altUrl(altLocale: Locale): string {
-  const altPath = pathname.replace(
-    new RegExp(`^/${locale}(/|$)`),
-    `/${altLocale}$1`,
-  );
-  return new URL(altPath, site).toString();
-}
+// Swap the leading locale segment (`/en/...`) with each alternative. Used
+// both for hreflang tags and the in-header language switcher, so the user
+// stays on the same page when toggling languages.
+const localeSwap = (altLocale: Locale): string =>
+  pathname.replace(new RegExp(`^/${locale}(/|$)`), `/${altLocale}$1`);
+
+const altUrl = (altLocale: Locale): string =>
+  new URL(localeSwap(altLocale), site).toString();
+
+type NavItem = { key: string; href: string; label: string };
+const navItems: NavItem[] = [
+  { key: "home", href: `/${locale}/`, label: t(locale, "nav.home") },
+  { key: "map", href: `/${locale}/map/`, label: t(locale, "nav.map") },
+  { key: "list", href: `/${locale}/list/`, label: t(locale, "nav.list") },
+  { key: "contact", href: `/${locale}/contact/`, label: t(locale, "nav.contact") },
+  {
+    key: "accessibility",
+    href: `/${locale}/accessibility/`,
+    label: t(locale, "nav.accessibility"),
+  },
+];
+
+// Match nav entries against the current path so one link can advertise
+// aria-current="page". Normalize trailing slashes so `/en/list` and
+// `/en/list/` both match the list entry.
+const normalize = (p: string) => (p.endsWith("/") ? p : `${p}/`);
+const currentPath = normalize(pathname);
+const isActive = (href: string) => normalize(href) === currentPath;
+
+const siteName = t(locale, "site.name");
+const fullTitle = title === siteName ? title : `${title} — ${siteName}`;
+
+const externalLinks = [
+  {
+    label: t(locale, "footer.github"),
+    href: "https://github.com/kyle-smith/mutual-aid-phoenix",
+    external: true,
+  },
+  {
+    label: t(locale, "footer.reference_site"),
+    href: "https://mutual-aid-in-philly.netlify.app/",
+    external: true,
+  },
+];
 ---
 
 <!doctype html>
@@ -30,7 +65,7 @@ function altUrl(altLocale: Locale): string {
     <meta charset="utf-8" />
     <meta name="viewport" content="width=device-width,initial-scale=1" />
     <meta name="generator" content={Astro.generator} />
-    <title>{title}</title>
+    <title>{fullTitle}</title>
     {description && <meta name="description" content={description} />}
     {
       LOCALES.map((alt) => (
@@ -38,13 +73,151 @@ function altUrl(altLocale: Locale): string {
       ))
     }
     <link rel="alternate" hreflang="x-default" href={altUrl(DEFAULT_LOCALE)} />
+    <link rel="icon" href="/favicon.svg" type="image/svg+xml" />
+    {/* Pre-paint theme resolution: set data-theme before first paint so
+        there's no light-to-dark flash for returning dark-mode users. */}
+    <script is:inline>
+      (() => {
+        try {
+          const saved = localStorage.getItem("theme");
+          const prefersDark = window.matchMedia(
+            "(prefers-color-scheme: dark)",
+          ).matches;
+          const theme =
+            saved === "light" || saved === "dark"
+              ? saved
+              : prefersDark
+                ? "dark"
+                : "light";
+          document.documentElement.dataset.theme = theme;
+        } catch {
+          /* localStorage unavailable — stay on default light theme. */
+        }
+      })();
+    </script>
   </head>
   <body>
     <a href="#main-content" class="skip-link">
       {t(locale, "chrome.skip_to_content")}
     </a>
+
+    <header class="site-header">
+      <div class="site-header-inner">
+        <a class="site-brand" href={`/${locale}/`}>
+          {siteName}
+        </a>
+
+        <nav class="site-nav" aria-label={t(locale, "chrome.site_nav_label")}>
+          {
+            navItems.map((item) => (
+              <a
+                href={item.href}
+                aria-current={isActive(item.href) ? "page" : undefined}
+              >
+                {item.label}
+              </a>
+            ))
+          }
+        </nav>
+
+        <div class="chrome-actions">
+          <div
+            class="language-switcher"
+            role="group"
+            aria-label={t(locale, "chrome.language_switcher_label")}
+          >
+            {
+              LOCALES.map((alt) => (
+                <a
+                  href={localeSwap(alt)}
+                  hreflang={alt}
+                  lang={alt}
+                  aria-current={alt === locale ? "true" : undefined}
+                >
+                  {alt.toUpperCase()}
+                </a>
+              ))
+            }
+          </div>
+
+          <button
+            type="button"
+            class="theme-toggle"
+            data-theme-toggle
+            aria-label={t(locale, "chrome.toggle_dark_mode")}
+          >
+            <span class="icon-light" aria-hidden="true">☾</span>
+            <span class="icon-dark" aria-hidden="true">☼</span>
+          </button>
+        </div>
+      </div>
+    </header>
+
     <main id="main-content">
       <slot />
     </main>
+
+    <footer class="site-footer">
+      <div class="site-footer-inner">
+        <div>
+          <h2>{t(locale, "footer.nav_heading")}</h2>
+          <ul>
+            {
+              navItems.map((item) => (
+                <li>
+                  <a href={item.href}>{item.label}</a>
+                </li>
+              ))
+            }
+          </ul>
+        </div>
+
+        <div>
+          <h2>{t(locale, "footer.resources_heading")}</h2>
+          <ul>
+            {
+              externalLinks.map((link) => (
+                <li>
+                  <a
+                    href={link.href}
+                    target="_blank"
+                    rel="noopener noreferrer"
+                  >
+                    {link.label}
+                  </a>
+                </li>
+              ))
+            }
+          </ul>
+        </div>
+
+        <p class="footer-meta">
+          <span>{t(locale, "footer.osm_attribution")}</span>
+          <span>{t(locale, "footer.protomaps_attribution")}</span>
+          <span>{t(locale, "footer.license_note")}</span>
+        </p>
+      </div>
+    </footer>
+
+    <script>
+      const btn = document.querySelector<HTMLButtonElement>(
+        "[data-theme-toggle]",
+      );
+      if (btn) {
+        btn.addEventListener("click", () => {
+          const current = document.documentElement.dataset.theme === "dark"
+            ? "dark"
+            : "light";
+          const next = current === "dark" ? "light" : "dark";
+          document.documentElement.dataset.theme = next;
+          try {
+            localStorage.setItem("theme", next);
+          } catch {
+            /* localStorage unavailable — the toggle still works for the
+               current session, it just won't persist. */
+          }
+        });
+      }
+    </script>
   </body>
 </html>

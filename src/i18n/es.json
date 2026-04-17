@@ -13,8 +13,11 @@
   "chrome": {
     "skip_to_content": "Saltar al contenido principal",
     "toggle_dark_mode": "Alternar modo oscuro",
+    "switch_to_light": "Cambiar al tema claro",
+    "switch_to_dark": "Cambiar al tema oscuro",
     "language_switcher_label": "Idioma",
-    "language_name": "Español"
+    "language_name": "Español",
+    "site_nav_label": "Principal"
   },
   "region": {
     "central-phoenix": "Centro de Phoenix",
@@ -77,6 +80,45 @@
     "clear_filters": "Borrar filtros",
     "showing_count_one": "Mostrando {count} recurso",
     "showing_count_other": "Mostrando {count} recursos"
+  },
+  "home": {
+    "hero_eyebrow": "Ayuda mutua en el área metropolitana de Phoenix",
+    "cta_map": "Ver en el mapa",
+    "cta_list": "Explorar la lista",
+    "cta_aria_map": "Explorar recursos en un mapa interactivo",
+    "cta_aria_list": "Explorar recursos en una lista con filtros"
+  },
+  "contact": {
+    "heading": "Contacto",
+    "intro": "¿Quieres sugerir un recurso, enviar una corrección o compartir comentarios sobre el sitio? Escríbenos. El correo es opcional — solo lo usamos para responderte si lo deseas.",
+    "name_label": "Tu nombre",
+    "name_optional": "opcional",
+    "email_label": "Correo electrónico",
+    "email_optional": "opcional",
+    "feedback_label": "Comentarios",
+    "feedback_required": "obligatorio",
+    "feedback_placeholder": "Reporta un problema, sugiere un recurso o cuéntanos cómo mejorar.",
+    "submit": "Enviar comentarios",
+    "sending": "Enviando…",
+    "success": "Gracias — recibimos tu mensaje. Te responderemos si dejaste un correo.",
+    "error_generic": "Ocurrió un error al enviar tu mensaje. También puedes abrir un issue en GitHub.",
+    "error_validation_feedback": "Escribe un mensaje antes de enviar.",
+    "issues_fallback": "Abrir un issue en GitHub",
+    "backend_pending_notice": "El backend del formulario de contacto aún está en construcción. Mientras tanto, abre un issue en GitHub.",
+    "required_hint": "Los campos marcados como obligatorios deben completarse."
+  },
+  "accessibility_page": {
+    "heading": "Accesibilidad"
+  },
+  "footer": {
+    "site_heading": "Ayuda Mutua en Phoenix",
+    "nav_heading": "Páginas",
+    "resources_heading": "Recursos",
+    "github": "Código fuente en GitHub",
+    "reference_site": "Mutual Aid in Philly (inspiración)",
+    "osm_attribution": "Datos del mapa © colaboradores de OpenStreetMap",
+    "protomaps_attribution": "Teselas © Protomaps",
+    "license_note": "Listados bajo CC BY-SA 4.0. Código bajo MIT."
   },
   "map": {
     "heading": "Mapa",

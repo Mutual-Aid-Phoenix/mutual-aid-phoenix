@@ -13,8 +13,11 @@
   "chrome": {
     "skip_to_content": "Skip to main content",
     "toggle_dark_mode": "Toggle dark mode",
+    "switch_to_light": "Switch to light theme",
+    "switch_to_dark": "Switch to dark theme",
     "language_switcher_label": "Language",
-    "language_name": "English"
+    "language_name": "English",
+    "site_nav_label": "Primary"
   },
   "region": {
     "central-phoenix": "Central Phoenix",
@@ -77,6 +80,45 @@
     "clear_filters": "Clear filters",
     "showing_count_one": "Showing {count} resource",
     "showing_count_other": "Showing {count} resources"
+  },
+  "home": {
+    "hero_eyebrow": "Mutual aid in the Greater Phoenix metro",
+    "cta_map": "View on map",
+    "cta_list": "Browse the list",
+    "cta_aria_map": "Browse resources on an interactive map",
+    "cta_aria_list": "Browse resources in a filterable list"
+  },
+  "contact": {
+    "heading": "Contact",
+    "intro": "Have a new resource to suggest, a correction, or feedback on the site? Send us a note. Email is optional — we only use it to reply if you'd like one.",
+    "name_label": "Your name",
+    "name_optional": "optional",
+    "email_label": "Email",
+    "email_optional": "optional",
+    "feedback_label": "Feedback",
+    "feedback_required": "required",
+    "feedback_placeholder": "Report a problem, suggest a listing, or share how we can do better.",
+    "submit": "Send feedback",
+    "sending": "Sending…",
+    "success": "Thanks — your message was received. We'll follow up if you left an email.",
+    "error_generic": "Something went wrong sending your message. You can file it as a GitHub issue instead.",
+    "error_validation_feedback": "Please write a message before sending.",
+    "issues_fallback": "Open a GitHub issue",
+    "backend_pending_notice": "The contact form backend is still being built. In the meantime please open a GitHub issue.",
+    "required_hint": "Fields marked required must be filled in."
+  },
+  "accessibility_page": {
+    "heading": "Accessibility"
+  },
+  "footer": {
+    "site_heading": "Mutual Aid in Phoenix",
+    "nav_heading": "Pages",
+    "resources_heading": "Resources",
+    "github": "Source on GitHub",
+    "reference_site": "Mutual Aid in Philly (inspiration)",
+    "osm_attribution": "Map data © OpenStreetMap contributors",
+    "protomaps_attribution": "Tiles © Protomaps",
+    "license_note": "Listings licensed CC BY-SA 4.0. Code under MIT."
   },
   "map": {
     "heading": "Map",

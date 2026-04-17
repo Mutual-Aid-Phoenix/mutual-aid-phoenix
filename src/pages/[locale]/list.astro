@@ -391,18 +391,6 @@ const totalCount = listings.length;
 </script>
 
 <style>
-  :root {
-    --color-border: #d4d4d4;
-    --color-border-strong: #888;
-    --color-text-muted: #555;
-    --color-bg-muted: #f5f5f5;
-    --color-tag-type: #1f3d5c;
-    --color-tag-category: #4a4a4a;
-    --color-stale: #8a5800;
-    --color-stale-bg: #fff4cc;
-    --color-chip-on: #1f3d5c;
-  }
-
   h1 {
     margin: 1.5rem 1rem 1rem;
     font-size: 1.75rem;
@@ -428,18 +416,14 @@ const totalCount = listings.length;
   .search-input {
     padding: 0.5rem 0.75rem;
     font-size: 1rem;
-    border: 1px solid var(--color-border-strong);
+    border: 1px solid var(--card-border-strong);
     border-radius: 6px;
-    background: #fff;
-  }
-
-  .search-input:focus-visible {
-    outline: 2px solid #005fcc;
-    outline-offset: 2px;
+    background: var(--input-bg);
+    color: var(--page-text);
   }
 
   .filter-group {
-    border: 1px solid var(--color-border);
+    border: 1px solid var(--card-border);
     border-radius: 6px;
     padding: 0.5rem 0.75rem 0.75rem;
     margin: 0;
@@ -459,24 +443,19 @@ const totalCount = listings.length;
   }
 
   .chip {
-    border: 1px solid var(--color-border-strong);
-    background: #fff;
-    color: #222;
+    border: 1px solid var(--card-border-strong);
+    background: var(--card-bg);
+    color: var(--page-text);
     padding: 0.25rem 0.75rem;
     font-size: 0.875rem;
     border-radius: 999px;
     cursor: pointer;
   }
 
-  .chip:focus-visible {
-    outline: 2px solid #005fcc;
-    outline-offset: 2px;
-  }
-
   .chip[aria-pressed="true"] {
-    background: var(--color-chip-on);
-    color: #fff;
-    border-color: var(--color-chip-on);
+    background: var(--chip-on);
+    color: var(--accent-fg);
+    border-color: var(--chip-on);
   }
 
   .filter-footer {
@@ -486,31 +465,27 @@ const totalCount = listings.length;
   }
 
   .clear-filters {
-    border: 1px solid var(--color-border-strong);
-    background: #fff;
+    border: 1px solid var(--card-border-strong);
+    background: var(--card-bg);
+    color: var(--page-text);
     padding: 0.25rem 0.75rem;
     border-radius: 4px;
     cursor: pointer;
     font-size: 0.875rem;
   }
 
-  .clear-filters:focus-visible {
-    outline: 2px solid #005fcc;
-    outline-offset: 2px;
-  }
-
   .results-count {
     margin: 0;
     font-size: 0.875rem;
-    color: var(--color-text-muted);
+    color: var(--page-text-muted);
   }
 
   .empty-state {
     margin: 1rem;
     padding: 1rem;
-    background: var(--color-bg-muted);
+    background: var(--bg-muted);
     border-radius: 6px;
-    color: var(--color-text-muted);
+    color: var(--page-text-muted);
     max-width: 64rem;
   }
 
@@ -524,15 +499,15 @@ const totalCount = listings.length;
   }
 
   .listing {
-    border: 1px solid var(--color-border);
+    border: 1px solid var(--card-border);
     border-radius: 6px;
     padding: 1rem 1.25rem;
-    background: #fff;
+    background: var(--card-bg);
   }
 
   .listing-stale {
     opacity: 0.75;
-    background: var(--color-stale-bg);
+    background: var(--stale-bg);
   }
 
   .listing-header h2 {
@@ -542,7 +517,7 @@ const totalCount = listings.length;
 
   .location-name {
     margin: 0 0 0.75rem;
-    color: var(--color-text-muted);
+    color: var(--page-text-muted);
     font-size: 0.9rem;
   }
 
@@ -560,15 +535,15 @@ const totalCount = listings.length;
     padding: 0.125rem 0.5rem;
     font-size: 0.8rem;
     border-radius: 999px;
-    color: #fff;
+    color: var(--accent-fg);
   }
 
   .tag-type {
-    background: var(--color-tag-type);
+    background: var(--tag-type);
   }
 
   .tag-category {
-    background: var(--color-tag-category);
+    background: var(--tag-category);
   }
 
   .description {
@@ -590,7 +565,6 @@ const totalCount = listings.length;
 
   .fact dt {
     font-weight: 600;
-    color: #333;
   }
 
   .fact dd {
@@ -618,14 +592,14 @@ const totalCount = listings.length;
   .verified {
     margin: 0.75rem 0 0;
     font-size: 0.85rem;
-    color: var(--color-text-muted);
+    color: var(--page-text-muted);
   }
 
   .stale-badge {
     margin-left: 0.5rem;
     padding: 0.125rem 0.5rem;
-    background: var(--color-stale);
-    color: #fff;
+    background: var(--stale-fg);
+    color: var(--accent-fg);
     border-radius: 4px;
     font-size: 0.75rem;
     font-weight: 500;

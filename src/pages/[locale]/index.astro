@@ -1,7 +1,7 @@
 ---
 import { getCollection, render } from "astro:content";
 import BaseLayout from "../../layouts/BaseLayout.astro";
-import { LOCALES, type Locale } from "../../i18n";
+import { LOCALES, t, type Locale } from "../../i18n";
 
 export async function getStaticPaths() {
   return LOCALES.map((locale) => ({ params: { locale } }));
@@ -25,5 +25,107 @@ const { Content } = await render(homeEntry);
   title={homeEntry.data.title}
   description={homeEntry.data.description}
 >
-  <Content />
+  <section class="hero">
+    <p class="eyebrow">{t(locale, "home.hero_eyebrow")}</p>
+    <h1>{homeEntry.data.title}</h1>
+    <div class="mission">
+      <Content />
+    </div>
+    <div class="cta-row">
+      <a
+        class="cta cta-primary"
+        href={`/${locale}/map/`}
+        aria-label={t(locale, "home.cta_aria_map")}
+      >
+        {t(locale, "home.cta_map")}
+      </a>
+      <a
+        class="cta cta-secondary"
+        href={`/${locale}/list/`}
+        aria-label={t(locale, "home.cta_aria_list")}
+      >
+        {t(locale, "home.cta_list")}
+      </a>
+    </div>
+  </section>
 </BaseLayout>
+
+<style>
+  .hero {
+    max-width: 48rem;
+    margin: 2rem auto;
+    padding: 0 1rem;
+  }
+
+  .eyebrow {
+    margin: 0 0 0.25rem;
+    font-size: 0.9rem;
+    font-weight: 600;
+    letter-spacing: 0.02em;
+    color: var(--page-text-muted);
+    text-transform: uppercase;
+  }
+
+  .hero h1 {
+    margin: 0 0 1rem;
+    font-size: clamp(1.875rem, 4vw, 2.5rem);
+    line-height: 1.15;
+  }
+
+  .mission {
+    font-size: 1.125rem;
+    line-height: 1.55;
+  }
+
+  .mission :global(p) {
+    margin: 0 0 0.75rem;
+  }
+
+  .mission :global(a) {
+    font-weight: 500;
+  }
+
+  .cta-row {
+    margin-top: 1.5rem;
+    display: flex;
+    flex-wrap: wrap;
+    gap: 0.75rem;
+  }
+
+  .cta {
+    display: inline-block;
+    padding: 0.625rem 1.25rem;
+    border-radius: 6px;
+    text-decoration: none;
+    font-weight: 600;
+    font-size: 1rem;
+    border: 2px solid var(--accent-bg);
+  }
+
+  .cta-primary {
+    background: var(--accent-bg);
+    color: var(--accent-fg);
+  }
+  .cta-primary:hover {
+    background: var(--link-hover);
+    border-color: var(--link-hover);
+    color: var(--accent-fg);
+  }
+
+  .cta-secondary {
+    background: transparent;
+    color: var(--accent-bg);
+  }
+  :root[data-theme="dark"] .cta-secondary {
+    color: var(--link);
+    border-color: var(--link);
+  }
+  .cta-secondary:hover {
+    background: var(--accent-bg);
+    color: var(--accent-fg);
+  }
+  :root[data-theme="dark"] .cta-secondary:hover {
+    background: var(--link);
+    color: var(--page-bg);
+  }
+</style>

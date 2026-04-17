@@ -3,8 +3,6 @@ title: Mutual Aid in Phoenix
 description: Find mutual aid resources across the Greater Phoenix metro — community fridges, free meals, harm reduction, and more.
 ---
 
-<!-- Placeholder copy. Final text lands in Phase 4 / Phase 8. -->
+Mutual aid is neighbors helping neighbors — no applications, no eligibility checks, no gatekeeping. This site collects resources across the Greater Phoenix metro so anyone who needs food, water, hygiene supplies, meals, harm-reduction supplies, or connection to other services can find them.
 
-Mutual aid is for everybody. No applications. No gatekeeping.
-
-[Browse the resource list](/en/list/)
+Everything here is free. Show up how you are — walk-up, drive-up, or by appointment — and take what you need. Volunteer-editable; if something is out of date, [let us know](/en/contact/).

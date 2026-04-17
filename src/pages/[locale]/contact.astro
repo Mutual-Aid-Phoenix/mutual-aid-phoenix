@@ -1,0 +1,389 @@
+---
+import BaseLayout from "../../layouts/BaseLayout.astro";
+import { LOCALES, t, type Locale } from "../../i18n";
+
+export async function getStaticPaths() {
+  return LOCALES.map((locale) => ({ params: { locale } }));
+}
+
+const { locale } = Astro.params as { locale: Locale };
+
+// Phase 6 registers a Turnstile site and sets this env var at build time.
+// Until then the widget slot stays empty and the form surfaces a notice
+// pointing users to GitHub issues.
+const turnstileSiteKey = import.meta.env.PUBLIC_TURNSTILE_SITE_KEY ?? "";
+const backendReady = Boolean(turnstileSiteKey);
+
+const issuesUrl = "https://github.com/kyle-smith/mutual-aid-phoenix/issues/new";
+
+const strings = {
+  error_generic: t(locale, "contact.error_generic"),
+  error_validation_feedback: t(locale, "contact.error_validation_feedback"),
+  sending: t(locale, "contact.sending"),
+  submit: t(locale, "contact.submit"),
+  success: t(locale, "contact.success"),
+  issues_fallback: t(locale, "contact.issues_fallback"),
+};
+---
+
+<BaseLayout
+  locale={locale}
+  title={t(locale, "contact.heading")}
+  description={t(locale, "contact.intro")}
+>
+  <section class="contact-wrap">
+    <h1>{t(locale, "contact.heading")}</h1>
+    <p class="intro">{t(locale, "contact.intro")}</p>
+
+    {
+      !backendReady && (
+        <div class="pending-notice" role="note">
+          <p>{t(locale, "contact.backend_pending_notice")}</p>
+          <a
+            class="issues-link"
+            href={issuesUrl}
+            target="_blank"
+            rel="noopener noreferrer"
+          >
+            {t(locale, "contact.issues_fallback")} →
+          </a>
+        </div>
+      )
+    }
+
+    <form
+      id="contact-form"
+      class="contact-form"
+      action="/api/contact"
+      method="post"
+      novalidate
+      data-strings={JSON.stringify(strings)}
+      data-issues-url={issuesUrl}
+    >
+      <p class="required-hint">{t(locale, "contact.required_hint")}</p>
+
+      <div class="field">
+        <label for="contact-name">
+          {t(locale, "contact.name_label")}
+          <span class="optional">({t(locale, "contact.name_optional")})</span>
+        </label>
+        <input
+          id="contact-name"
+          name="name"
+          type="text"
+          autocomplete="name"
+          maxlength="120"
+        />
+      </div>
+
+      <div class="field">
+        <label for="contact-email">
+          {t(locale, "contact.email_label")}
+          <span class="optional">({t(locale, "contact.email_optional")})</span>
+        </label>
+        <input
+          id="contact-email"
+          name="email"
+          type="email"
+          autocomplete="email"
+          maxlength="200"
+        />
+      </div>
+
+      <div class="field">
+        <label for="contact-feedback">
+          {t(locale, "contact.feedback_label")}
+          <span class="required">
+            ({t(locale, "contact.feedback_required")})
+          </span>
+        </label>
+        <textarea
+          id="contact-feedback"
+          name="feedback"
+          rows="6"
+          required
+          aria-required="true"
+          aria-describedby="contact-feedback-error"
+          maxlength="5000"
+          placeholder={t(locale, "contact.feedback_placeholder")}></textarea>
+        <p id="contact-feedback-error" class="field-error" hidden></p>
+      </div>
+
+      {
+        backendReady && (
+          <div class="turnstile-wrap">
+            <div class="cf-turnstile" data-sitekey={turnstileSiteKey} />
+          </div>
+        )
+      }
+
+      <div class="submit-row">
+        <button type="submit" class="submit-btn">
+          {t(locale, "contact.submit")}
+        </button>
+        <p class="form-status" role="status" aria-live="polite" data-form-status></p>
+      </div>
+
+      <noscript>
+        <p class="noscript-notice">
+          <a href={issuesUrl} target="_blank" rel="noopener noreferrer">
+            {t(locale, "contact.issues_fallback")}
+          </a>
+        </p>
+      </noscript>
+    </form>
+  </section>
+
+  {
+    backendReady && (
+      <script
+        is:inline
+        async
+        src="https://challenges.cloudflare.com/turnstile/v0/api.js"
+      />
+    )
+  }
+</BaseLayout>
+
+<script>
+  type Strings = {
+    error_generic: string;
+    error_validation_feedback: string;
+    sending: string;
+    submit: string;
+    success: string;
+    issues_fallback: string;
+  };
+
+  const form = document.getElementById("contact-form") as HTMLFormElement | null;
+  if (form) {
+    const strings = JSON.parse(form.dataset.strings ?? "{}") as Strings;
+    const issuesUrl = form.dataset.issuesUrl ?? "";
+    const status = form.querySelector<HTMLParagraphElement>("[data-form-status]");
+    const feedbackInput = form.querySelector<HTMLTextAreaElement>(
+      "#contact-feedback",
+    );
+    const feedbackErr = form.querySelector<HTMLParagraphElement>(
+      "#contact-feedback-error",
+    );
+    const submitBtn = form.querySelector<HTMLButtonElement>(".submit-btn");
+
+    const clearFeedbackErr = () => {
+      if (!feedbackErr) return;
+      feedbackErr.textContent = "";
+      feedbackErr.hidden = true;
+      feedbackInput?.setAttribute("aria-invalid", "false");
+    };
+
+    const setFeedbackErr = (msg: string) => {
+      if (!feedbackErr) return;
+      feedbackErr.textContent = msg;
+      feedbackErr.hidden = false;
+      feedbackInput?.setAttribute("aria-invalid", "true");
+      feedbackInput?.focus();
+    };
+
+    feedbackInput?.addEventListener("input", clearFeedbackErr);
+
+    form.addEventListener("submit", async (e) => {
+      e.preventDefault();
+      clearFeedbackErr();
+      if (!status || !submitBtn) return;
+
+      const feedback = (feedbackInput?.value ?? "").trim();
+      if (!feedback) {
+        setFeedbackErr(strings.error_validation_feedback);
+        return;
+      }
+
+      submitBtn.disabled = true;
+      submitBtn.textContent = strings.sending;
+      status.textContent = "";
+      status.classList.remove("is-error", "is-success");
+
+      try {
+        const body = new FormData(form);
+        const res = await fetch(form.action, {
+          method: "POST",
+          body,
+          headers: { Accept: "application/json" },
+        });
+        if (!res.ok) throw new Error(`HTTP ${res.status}`);
+        form.reset();
+        status.textContent = strings.success;
+        status.classList.add("is-success");
+      } catch {
+        // Graceful fallback when the Pages Function isn't live yet or
+        // returns an error: surface the issue-tracker link so the user's
+        // effort isn't wasted.
+        status.innerHTML = "";
+        status.textContent = `${strings.error_generic} `;
+        const a = document.createElement("a");
+        a.href = issuesUrl;
+        a.target = "_blank";
+        a.rel = "noopener noreferrer";
+        a.textContent = strings.issues_fallback;
+        status.appendChild(a);
+        status.classList.add("is-error");
+      } finally {
+        submitBtn.disabled = false;
+        submitBtn.textContent = strings.submit;
+      }
+    });
+  }
+</script>
+
+<style>
+  .contact-wrap {
+    max-width: 40rem;
+    margin: 2rem auto;
+    padding: 0 1rem;
+  }
+
+  h1 {
+    margin: 0 0 0.75rem;
+    font-size: 1.75rem;
+  }
+
+  .intro {
+    margin: 0 0 1.25rem;
+    font-size: 1rem;
+    line-height: 1.5;
+  }
+
+  .pending-notice {
+    margin: 0 0 1.25rem;
+    padding: 0.875rem 1rem;
+    background: var(--stale-bg);
+    color: var(--stale-fg);
+    border: 1px solid var(--stale-fg);
+    border-radius: 6px;
+  }
+
+  .pending-notice p {
+    margin: 0 0 0.5rem;
+    font-size: 0.9rem;
+  }
+
+  .issues-link {
+    font-weight: 600;
+    color: var(--stale-fg);
+  }
+
+  .contact-form {
+    display: grid;
+    gap: 1rem;
+  }
+
+  .required-hint {
+    margin: 0;
+    font-size: 0.85rem;
+    color: var(--page-text-muted);
+  }
+
+  .field {
+    display: grid;
+    gap: 0.25rem;
+  }
+
+  .field label {
+    font-weight: 600;
+    font-size: 0.95rem;
+  }
+
+  .field .optional {
+    color: var(--page-text-muted);
+    font-weight: 400;
+    font-size: 0.85rem;
+    margin-left: 0.25rem;
+  }
+
+  .field .required {
+    color: var(--error-border);
+    font-weight: 400;
+    font-size: 0.85rem;
+    margin-left: 0.25rem;
+  }
+
+  input[type="text"],
+  input[type="email"],
+  textarea {
+    padding: 0.5rem 0.75rem;
+    font-size: 1rem;
+    font-family: inherit;
+    border: 1px solid var(--card-border-strong);
+    border-radius: 6px;
+    background: var(--input-bg);
+    color: var(--page-text);
+  }
+
+  textarea {
+    resize: vertical;
+    line-height: 1.45;
+  }
+
+  input[aria-invalid="true"],
+  textarea[aria-invalid="true"] {
+    border-color: var(--error-border);
+  }
+
+  .field-error {
+    margin: 0.25rem 0 0;
+    font-size: 0.875rem;
+    color: var(--error-fg);
+    font-weight: 500;
+  }
+
+  .turnstile-wrap {
+    margin: 0.25rem 0;
+  }
+
+  .submit-row {
+    display: flex;
+    align-items: center;
+    gap: 1rem;
+    flex-wrap: wrap;
+  }
+
+  .submit-btn {
+    appearance: none;
+    padding: 0.625rem 1.25rem;
+    border-radius: 6px;
+    border: 2px solid var(--accent-bg);
+    background: var(--accent-bg);
+    color: var(--accent-fg);
+    font-size: 1rem;
+    font-weight: 600;
+    cursor: pointer;
+  }
+
+  .submit-btn:hover {
+    background: var(--link-hover);
+    border-color: var(--link-hover);
+  }
+
+  .submit-btn:disabled {
+    opacity: 0.6;
+    cursor: progress;
+  }
+
+  .form-status {
+    margin: 0;
+    font-size: 0.9rem;
+  }
+
+  .form-status.is-success {
+    color: var(--success-fg);
+    font-weight: 500;
+  }
+
+  .form-status.is-error {
+    color: var(--error-fg);
+    font-weight: 500;
+  }
+
+  .noscript-notice {
+    margin: 0.5rem 0 0;
+    font-size: 0.9rem;
+  }
+</style>

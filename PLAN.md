@@ -110,10 +110,10 @@ Goal: the headline discovery surface, with accessibility parity the reference si
 
 Goal: round out the site with Home, Contact, and Accessibility Statement.
 
-- [ ] **Home**: hero, mission statement, primary CTAs to Map + List. All copy pulled from `src/content/pages/home.md` + translation files so the CMS can edit it.
-- [ ] **Contact**: form with Name (optional), Email (optional), Feedback (required), plus a Cloudflare Turnstile widget. Submits to a Pages Function (Phase 6).
-- [ ] **Accessibility Statement**: Markdown page, mirrors the reference site's structure (WCAG 2.2 AA claim, implemented features, known limitations, contact path). Editable via CMS.
-- [ ] **Shared layout**: header with nav + dark-mode toggle + **language switcher**; skip-to-main-content link; footer with internal + external resource links. All strings translated.
+- [x] **Home**: hero, mission statement, primary CTAs to Map + List. All copy pulled from `src/content/pages/home.md` + translation files so the CMS can edit it.
+- [x] **Contact**: form with Name (optional), Email (optional), Feedback (required), plus a Cloudflare Turnstile widget. Submits to a Pages Function (Phase 6).
+- [x] **Accessibility Statement**: Markdown page, mirrors the reference site's structure (WCAG 2.2 AA claim, implemented features, known limitations, contact path). Editable via CMS.
+- [x] **Shared layout**: header with nav + dark-mode toggle + **language switcher**; skip-to-main-content link; footer with internal + external resource links. All strings translated.
 
 **Exit criteria:** All five pages render in both locales. Language switcher preserves the current page when toggling.
 
