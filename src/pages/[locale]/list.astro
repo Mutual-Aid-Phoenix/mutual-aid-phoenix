@@ -1,0 +1,288 @@
+---
+import { getCollection } from "astro:content";
+import BaseLayout from "../../layouts/BaseLayout.astro";
+import { LOCALES, t, type Locale } from "../../i18n";
+import { formatSchedule, formatDate } from "../../lib/format-schedule";
+
+export async function getStaticPaths() {
+  return LOCALES.map((locale) => ({ params: { locale } }));
+}
+
+const { locale } = Astro.params as { locale: Locale };
+
+const listings = (await getCollection("listings")).sort((a, b) =>
+  a.data.name[locale].localeCompare(b.data.name[locale], locale),
+);
+
+// Build-time "today" — staleness drifts between deploys. For v1 (manual
+// deploys) that lag is acceptable; once CI redeploys daily the threshold
+// stays fresh.
+const NINETY_DAYS_MS = 90 * 24 * 60 * 60 * 1000;
+const now = Date.now();
+---
+
+<BaseLayout locale={locale} title={t(locale, "list.heading")}>
+  <h1>{t(locale, "list.heading")}</h1>
+
+  <ul role="list" class="listings">
+    {
+      listings.map((listing) => {
+        const { data } = listing;
+        const isStale =
+          now - data.last_verified_date.getTime() > NINETY_DAYS_MS;
+        const mapsUrl = `https://www.google.com/maps/search/?api=1&query=${data.lat},${data.lng}`;
+        const formatted = formatSchedule(data.schedule, locale);
+        const addressLine = [
+          data.address_1,
+          data.address_2,
+          `${data.city}, ${data.state} ${data.zip_code}`,
+        ]
+          .filter(Boolean)
+          .join(", ");
+
+        return (
+          <li class:list={["listing", { "listing-stale": isStale }]}>
+            <article aria-labelledby={`listing-${listing.id}-heading`}>
+              <header class="listing-header">
+                <h2 id={`listing-${listing.id}-heading`}>
+                  {data.name[locale]}
+                </h2>
+                <p class="location-name">{data.location_name[locale]}</p>
+              </header>
+
+              <ul role="list" class="tags">
+                {data.resource_type.map((rt) => (
+                  <li class="tag tag-type">
+                    {t(locale, `resource_type.${rt}`)}
+                  </li>
+                ))}
+                {data.category.map((c) => (
+                  <li class="tag tag-category">{t(locale, `category.${c}`)}</li>
+                ))}
+              </ul>
+
+              <p class="description">{data.description[locale]}</p>
+
+              <dl class="listing-facts">
+                <div class="fact">
+                  <dt>{t(locale, "listing.hours_label")}</dt>
+                  <dd>
+                    {formatted.kind === "text" ? (
+                      <span>{formatted.text}</span>
+                    ) : (
+                      <ul role="list" class="hours-rows">
+                        {formatted.rows.map((row) => (
+                          <li>
+                            <span class="hours-label">{row.label}</span>
+                            <span class="hours-time">{row.time}</span>
+                          </li>
+                        ))}
+                      </ul>
+                    )}
+                  </dd>
+                </div>
+
+                <div class="fact">
+                  <dt>{t(locale, "listing.address_label")}</dt>
+                  <dd>
+                    <a
+                      href={mapsUrl}
+                      target="_blank"
+                      rel="noopener noreferrer"
+                    >
+                      {addressLine}
+                    </a>
+                  </dd>
+                </div>
+
+                <div class="fact">
+                  <dt>{t(locale, "listing.barriers_to_entry")}</dt>
+                  <dd>{data.barriers_to_entry[locale]}</dd>
+                </div>
+
+                <div class="fact">
+                  <dt>{t(locale, "listing.accessibility_notes")}</dt>
+                  <dd>{data.accessibility_notes[locale]}</dd>
+                </div>
+
+                {data.languages_spoken.length > 0 && (
+                  <div class="fact">
+                    <dt>{t(locale, "listing.languages_spoken")}</dt>
+                    <dd>
+                      {data.languages_spoken
+                        .map((code) =>
+                          code === "en"
+                            ? locale === "en"
+                              ? "English"
+                              : "Inglés"
+                            : code === "es"
+                              ? locale === "en"
+                                ? "Spanish"
+                                : "Español"
+                              : code,
+                        )
+                        .join(", ")}
+                    </dd>
+                  </div>
+                )}
+              </dl>
+
+              <p class="verified">
+                {t(locale, "listing.last_verified")}:{" "}
+                <time datetime={data.last_verified_date.toISOString()}>
+                  {formatDate(data.last_verified_date, locale)}
+                </time>
+                {isStale && (
+                  <span class="stale-badge">
+                    {t(locale, "listing.stale_badge")}
+                  </span>
+                )}
+              </p>
+            </article>
+          </li>
+        );
+      })
+    }
+  </ul>
+</BaseLayout>
+
+<style>
+  :root {
+    --color-border: #d4d4d4;
+    --color-border-strong: #888;
+    --color-bg-muted: #f5f5f5;
+    --color-tag-type: #1f3d5c;
+    --color-tag-category: #4a4a4a;
+    --color-stale: #8a5800;
+    --color-stale-bg: #fff4cc;
+  }
+
+  h1 {
+    margin: 1.5rem 1rem 1rem;
+    font-size: 1.75rem;
+  }
+
+  .listings {
+    list-style: none;
+    padding: 0;
+    margin: 0 1rem;
+    display: grid;
+    gap: 1rem;
+    max-width: 64rem;
+  }
+
+  .listing {
+    border: 1px solid var(--color-border);
+    border-radius: 6px;
+    padding: 1rem 1.25rem;
+    background: #fff;
+  }
+
+  .listing-stale {
+    opacity: 0.75;
+    background: var(--color-stale-bg);
+  }
+
+  .listing-header h2 {
+    margin: 0 0 0.125rem;
+    font-size: 1.25rem;
+  }
+
+  .location-name {
+    margin: 0 0 0.75rem;
+    color: var(--color-border-strong);
+    font-size: 0.9rem;
+  }
+
+  .tags {
+    list-style: none;
+    padding: 0;
+    margin: 0 0 0.75rem;
+    display: flex;
+    flex-wrap: wrap;
+    gap: 0.375rem;
+  }
+
+  .tag {
+    display: inline-block;
+    padding: 0.125rem 0.5rem;
+    font-size: 0.8rem;
+    border-radius: 999px;
+    color: #fff;
+  }
+
+  .tag-type {
+    background: var(--color-tag-type);
+  }
+
+  .tag-category {
+    background: var(--color-tag-category);
+  }
+
+  .description {
+    margin: 0.5rem 0 0.75rem;
+    line-height: 1.5;
+  }
+
+  .listing-facts {
+    margin: 0.5rem 0 0.75rem;
+    display: grid;
+    gap: 0.5rem;
+  }
+
+  .fact {
+    display: grid;
+    grid-template-columns: 8rem 1fr;
+    gap: 0.75rem;
+  }
+
+  .fact dt {
+    font-weight: 600;
+    color: #333;
+  }
+
+  .fact dd {
+    margin: 0;
+  }
+
+  .hours-rows {
+    list-style: none;
+    padding: 0;
+    margin: 0;
+    display: grid;
+    gap: 0.125rem;
+  }
+
+  .hours-rows li {
+    display: grid;
+    grid-template-columns: 4rem 1fr;
+    gap: 0.5rem;
+  }
+
+  .hours-label {
+    font-weight: 500;
+  }
+
+  .verified {
+    margin: 0.75rem 0 0;
+    font-size: 0.85rem;
+    color: #555;
+  }
+
+  .stale-badge {
+    margin-left: 0.5rem;
+    padding: 0.125rem 0.5rem;
+    background: var(--color-stale);
+    color: #fff;
+    border-radius: 4px;
+    font-size: 0.75rem;
+    font-weight: 500;
+  }
+
+  @media (max-width: 540px) {
+    .fact {
+      grid-template-columns: 1fr;
+      gap: 0.125rem;
+    }
+  }
+</style>

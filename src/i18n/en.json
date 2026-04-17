@@ -59,8 +59,22 @@
   "listing": {
     "last_verified": "Last verified",
     "get_directions": "Get directions",
+    "hours_label": "Hours",
+    "address_label": "Address",
     "barriers_to_entry": "Requirements",
     "accessibility_notes": "Accessibility",
-    "languages_spoken": "Languages spoken"
+    "languages_spoken": "Languages spoken",
+    "stale_badge": "Needs verification"
+  },
+  "list": {
+    "heading": "Resources",
+    "empty": "No resources match your filters."
+  },
+  "ordinal_week": {
+    "1": "1st",
+    "2": "2nd",
+    "3": "3rd",
+    "4": "4th",
+    "5": "last"
   }
 }

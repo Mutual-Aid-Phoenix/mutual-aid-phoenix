@@ -6,3 +6,5 @@ description: Find mutual aid resources across the Greater Phoenix metro — comm
 <!-- Placeholder copy. Final text lands in Phase 4 / Phase 8. -->
 
 Mutual aid is for everybody. No applications. No gatekeeping.
+
+[Browse the resource list](/en/list/)

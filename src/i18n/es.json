@@ -59,8 +59,22 @@
   "listing": {
     "last_verified": "Verificado por última vez",
     "get_directions": "Cómo llegar",
+    "hours_label": "Horario",
+    "address_label": "Dirección",
     "barriers_to_entry": "Requisitos",
     "accessibility_notes": "Accesibilidad",
-    "languages_spoken": "Idiomas hablados"
+    "languages_spoken": "Idiomas hablados",
+    "stale_badge": "Requiere verificación"
+  },
+  "list": {
+    "heading": "Recursos",
+    "empty": "Ningún recurso coincide con tus filtros."
+  },
+  "ordinal_week": {
+    "1": "1er",
+    "2": "2do",
+    "3": "3er",
+    "4": "4to",
+    "5": "último"
   }
 }
