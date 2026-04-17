@@ -29,18 +29,18 @@ Custom domain, "open now" filter, geolocation sort, PWA/offline mode, additional
 
 Goal: a deployed "hello world" Astro site at `mutual-aid-phoenix.pages.dev`, published from laptop.
 
-- [ ] **Install tools (one-time):**
-  - [ ] Node 22 (`nvm install 22`)
-  - [ ] Enable pnpm via corepack: `corepack enable && corepack prepare pnpm@latest --activate`
-  - [ ] `gh` CLI — repo + Issue work
-  - [ ] `go-pmtiles` (`brew install protomaps/tap/go-pmtiles`) — for the tile step in Phase 3
-- [ ] Authenticate: `gh auth login`. (Wrangler logs in during the first deploy below.)
-- [ ] Create GitHub repo `mutual-aid-phoenix` (public) via `gh repo create`.
-- [ ] Scaffold Astro project with TypeScript + Tailwind CSS v4 (`pnpm create astro@latest`). Add `"packageManager": "pnpm@<version>"` to `package.json` so tooling pins to pnpm.
-- [ ] Add `wrangler` as a dev dep: `pnpm add -D wrangler`. Then `pnpm wrangler login`.
+- [x] **Install tools (one-time):**
+  - [x] Node 22 (`nvm install 22`)
+  - [x] Enable pnpm via corepack: `corepack enable && corepack prepare pnpm@latest --activate`
+  - [x] `gh` CLI — repo + Issue work
+  - [x] `go-pmtiles` (`brew install protomaps/tap/go-pmtiles`) — for the tile step in Phase 3
+- [x] Authenticate: `gh auth login`. (Wrangler logs in during the first deploy below.)
+- [x] Create GitHub repo `mutual-aid-phoenix` (public) via `gh repo create`.
+- [x] Scaffold Astro project with TypeScript + Tailwind CSS v4 (`pnpm create astro@latest`). Add `"packageManager": "pnpm@<version>"` to `package.json` so tooling pins to pnpm.
+- [x] Add `wrangler` as a dev dep: `pnpm add -D wrangler`. Then `pnpm wrangler login`.
 - [ ] Add baseline files: `README.md`, `LICENSE` (MIT), `.editorconfig`, `.gitignore`, `.nvmrc`.
-- [ ] First deploy: `pnpm build && pnpm wrangler pages deploy ./dist --project-name=mutual-aid-phoenix`. The first run creates the Pages project.
-- [ ] Add `"deploy": "pnpm build && wrangler pages deploy ./dist"` to `package.json` scripts. Every subsequent deploy is `pnpm deploy`.
+- [x] First deploy: `pnpm build && pnpm wrangler pages deploy ./dist --project-name=mutual-aid-phoenix`. The first run creates the Pages project.
+- [x] Add `"deploy": "pnpm build && wrangler pages deploy ./dist"` to `package.json` scripts. Every subsequent deploy is `pnpm deploy`.
 
 **Exit criteria:** `pnpm deploy` publishes a hello-world Astro page to `mutual-aid-phoenix.pages.dev` over HTTPS.
 
@@ -50,18 +50,8 @@ Goal: a deployed "hello world" Astro site at `mutual-aid-phoenix.pages.dev`, pub
 
 Goal: define the data shape once, so every subsequent phase reads from it.
 
-- [ ] Define an Astro Content Collection `listings/` with a Zod schema. Required fields:
-  - `name` (i18n: EN + ES), `slug`, `type[]` (enum: `distro` / `fridge` / `free-table` / `meals` / `health` / `resource-center` / `other`)
-  - `region` (enum: Central Phoenix / North Phoenix / South Phoenix / West Valley / East Valley / etc.)
-  - `address`, `lat` (**required**), `lng` (**required**)
-  - `hours` (structured — day-of-week → open/close ranges; allow "by appointment," "varies," "24/7")
-  - `description` (i18n: EN + ES; rich text / Markdown)
-  - `accessibility_notes` (i18n: EN + ES; free text: step-free entry, ADA restroom, etc.)
-  - `languages_spoken[]` (ISO codes)
-  - `contact` (optional: phone, email, url)
-  - `last_verified_date`
-  - `source_url` (optional; where the listing data came from)
-- [ ] Build-time check (added alongside the schema): fail `pnpm build` if any listing's `lat`/`lng` falls outside the Greater Phoenix metro bounding box. Catches geocoding errors and typos automatically.
+- [ ] Define an Astro Content Collection `listings/` with a Zod schema matching the shape in [DATA_MODEL.md](./DATA_MODEL.md). Store listings as Markdown files with YAML frontmatter under `src/content/listings/`.
+- [ ] Encode the build-time invariants from DATA_MODEL.md as Zod refinements — including the Greater Phoenix metro bounding-box check on `lat`/`lng`, unique `slug`, required `cadence_data` when `schedule.kind === "recurring"`, and i18n completeness for every `*` field across launch locales.
 - [ ] Create `src/content/pages/` for editable page content (Home, Accessibility Statement) as Markdown with frontmatter.
 - [ ] Create `src/i18n/en.json` and `src/i18n/es.json` for UI strings. Convention: **no hardcoded user-facing strings in `.astro` components** — everything routes through the translation files.
 - [ ] Configure Astro i18n routing: `/en/…` and `/es/…`, default locale `en`, redirect `/` → `/en/`. Add `hreflang` tags to the base layout.

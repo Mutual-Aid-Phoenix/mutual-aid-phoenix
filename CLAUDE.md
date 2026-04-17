@@ -36,6 +36,11 @@ Mermaid diagrams showing the runtime architecture: a system-overview flowchart p
 
 Keep ARCHITECTURE.md in sync when components are added/removed or flows change. If a phase in PLAN.md introduces a new component, update the relevant diagram in the same PR.
 
+### [DATA_MODEL.md](./DATA_MODEL.md)
+Canonical schema for the `Listing` entity — fields, enums, the `schedule` tagged union, and the invariants that must be enforced at build time. This is the authoritative shape; the Astro Content Collection's Zod schema and Decap CMS's `config.yml` both mirror it and must stay in sync with it.
+
+When a field, enum value, or invariant changes, update DATA_MODEL.md first, then propagate to the Zod schema and Decap config in the same PR.
+
 ## Tooling & conventions
 
 - **Package manager:** pnpm (enabled via corepack — `corepack enable && corepack prepare pnpm@latest --activate`). All commands use `pnpm` / `pnpm dlx`, never `npm` / `npx`.
