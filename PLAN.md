@@ -66,8 +66,8 @@ Goal: define the data shape once, so every subsequent phase reads from it.
 Goal: a fully functional, accessible listings page — the fallback surface for anyone who can't use the map.
 
 - [x] Build the list view page at `/[locale]/list/`.
-- [ ] Region filter chips (multi-select) and resource-type filter chips.
-- [ ] URL-synced filter state (query params) so filtered views are shareable/back-button-safe.
+- [x] Region filter chips (multi-select) and resource-type filter chips.
+- [x] URL-synced filter state (query params) so filtered views are shareable/back-button-safe.
 - [ ] Integrate **Pagefind** for static full-text search across listings.
 - [x] Each listing card shows: name, type tags, description, hours (human-formatted from the structured data), address (links to Google Maps directions via the no-key `/maps/search/?api=1&query=…` URL).
 - [x] Sort: alphabetical by default. Leave sort-by-nearest as a future hook.

@@ -68,7 +68,13 @@
   },
   "list": {
     "heading": "Resources",
-    "empty": "No resources match your filters."
+    "empty": "No resources match your filters.",
+    "filters_label": "Filters",
+    "filter_region_legend": "Filter by region",
+    "filter_type_legend": "Filter by resource type",
+    "clear_filters": "Clear filters",
+    "showing_count_one": "Showing {count} resource",
+    "showing_count_other": "Showing {count} resources"
   },
   "ordinal_week": {
     "1": "1st",

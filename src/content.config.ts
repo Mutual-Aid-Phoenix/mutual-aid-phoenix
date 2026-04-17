@@ -30,16 +30,18 @@ const i18nString = z.object(
   >,
 );
 
-const resourceType = z.enum([
+export const RESOURCE_TYPES = [
   "distro",
   "fridge",
   "free-table",
   "meals",
   "resource-center",
   "other",
-]);
+] as const;
+export type ResourceType = (typeof RESOURCE_TYPES)[number];
+const resourceType = z.enum(RESOURCE_TYPES);
 
-const category = z.enum([
+export const CATEGORIES = [
   "food",
   "harm-reduction",
   "medical",
@@ -48,15 +50,19 @@ const category = z.enum([
   "clothing",
   "shelter",
   "other",
-]);
+] as const;
+export type Category = (typeof CATEGORIES)[number];
+const category = z.enum(CATEGORIES);
 
-const region = z.enum([
+export const REGIONS = [
   "central-phoenix",
   "north-phoenix",
   "south-phoenix",
   "east-valley",
   "west-valley",
-]);
+] as const;
+export type Region = (typeof REGIONS)[number];
+const region = z.enum(REGIONS);
 
 const season = z.enum(["spring", "summer", "winter", "fall"]);
 
