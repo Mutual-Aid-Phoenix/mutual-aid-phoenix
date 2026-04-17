@@ -28,6 +28,20 @@ const totalCount = listings.length;
   <h1>{t(locale, "list.heading")}</h1>
 
   <section class="filters" aria-label={t(locale, "list.filters_label")} data-filters>
+    <div class="search-row" data-search-row hidden>
+      <label class="search-label" for="listing-search">
+        {t(locale, "list.search_label")}
+      </label>
+      <input
+        id="listing-search"
+        type="search"
+        class="search-input"
+        data-search-input
+        placeholder={t(locale, "list.search_placeholder")}
+        autocomplete="off"
+      />
+    </div>
+
     <fieldset class="filter-group">
       <legend>{t(locale, "list.filter_region_legend")}</legend>
       <div class="chip-group" role="group">
@@ -99,6 +113,7 @@ const totalCount = listings.length;
         return (
           <li
             class:list={["listing", { "listing-stale": isStale }]}
+            data-listing-id={listing.id}
             data-region={data.region}
             data-types={data.resource_type.join(" ")}
           >
@@ -213,18 +228,22 @@ const totalCount = listings.length;
     countOther: t(locale, "list.showing_count_other"),
   }}
 >
-  (() => {
+  (async () => {
     const filters = document.querySelector("[data-filters]");
     const listEl = document.querySelector("[data-listings]");
     const emptyEl = document.querySelector("[data-empty-state]");
     const countEl = document.querySelector("[data-results-count]");
     const clearBtn = document.querySelector("[data-clear-filters]");
+    const searchRow = document.querySelector("[data-search-row]");
+    const searchInput = document.querySelector("[data-search-input]");
     if (!filters || !listEl || !countEl || !clearBtn || !emptyEl) return;
 
     const chips = filters.querySelectorAll("[data-filter]");
     const items = listEl.querySelectorAll("li.listing");
 
-    const state = { region: new Set(), type: new Set() };
+    // searchMatches === null means "no active search" (don't filter by it).
+    // A Set (possibly empty) means "only these listing IDs pass".
+    const state = { region: new Set(), type: new Set(), q: "", searchMatches: null };
 
     const formatCount = (n) =>
       (n === 1 ? countOne : countOther).replace("{count}", String(n));
@@ -233,12 +252,14 @@ const totalCount = listings.length;
       const p = new URLSearchParams(window.location.search);
       state.region = new Set((p.get("region") || "").split(",").filter(Boolean));
       state.type = new Set((p.get("type") || "").split(",").filter(Boolean));
+      state.q = p.get("q") || "";
     };
 
     const writeURL = () => {
       const p = new URLSearchParams();
       if (state.region.size) p.set("region", [...state.region].join(","));
       if (state.type.size) p.set("type", [...state.type].join(","));
+      if (state.q) p.set("q", state.q);
       const qs = p.toString();
       const url =
         window.location.pathname + (qs ? "?" + qs : "") + window.location.hash;
@@ -254,6 +275,9 @@ const totalCount = listings.length;
         const types = (li.dataset.types || "").split(" ").filter(Boolean);
         if (!types.some((t) => state.type.has(t))) return false;
       }
+      if (state.searchMatches !== null) {
+        if (!state.searchMatches.has(li.dataset.listingId)) return false;
+      }
       return true;
     };
 
@@ -266,7 +290,8 @@ const totalCount = listings.length;
       });
       countEl.textContent = formatCount(visible);
       emptyEl.hidden = visible !== 0;
-      const anyActive = state.region.size > 0 || state.type.size > 0;
+      const anyActive =
+        state.region.size > 0 || state.type.size > 0 || state.q.length > 0;
       clearBtn.hidden = !anyActive;
       chips.forEach((btn) => {
         const f = btn.dataset.filter;
@@ -292,11 +317,75 @@ const totalCount = listings.length;
     clearBtn.addEventListener("click", () => {
       state.region.clear();
       state.type.clear();
+      state.q = "";
+      state.searchMatches = null;
+      if (searchInput) searchInput.value = "";
       writeURL();
       apply();
     });
 
     readURL();
+
+    // Pagefind is generated at build time; absent in `astro dev`. Load lazily
+    // and reveal the search UI only if the runtime loads successfully.
+    let pagefind = null;
+    if (searchInput && searchRow) {
+      try {
+        pagefind = await import("/pagefind/pagefind.js");
+        await pagefind.options({ excerptLength: 0 });
+        searchRow.hidden = false;
+      } catch {
+        // Pagefind not available (dev server, or build without index).
+        // Leave search UI hidden; chips still work.
+      }
+    }
+
+    // Extract listing id from a sub-result URL like
+    // "/en/list/#listing-<id>-heading". Returns null if the anchor doesn't
+    // follow that pattern (e.g., the page-level result with no fragment).
+    const listingIdFromUrl = (url) => {
+      const hash = url.split("#")[1];
+      if (!hash) return null;
+      const m = hash.match(/^listing-(.+)-heading$/);
+      return m ? m[1] : null;
+    };
+
+    const runSearch = async (q) => {
+      state.q = q;
+      if (!pagefind || !q.trim()) {
+        state.searchMatches = null;
+        writeURL();
+        apply();
+        return;
+      }
+      const res = await pagefind.search(q.trim());
+      const ids = new Set();
+      // Pull anchored sub-results from every page-level match. On our site
+      // there's really only one page per locale with listings, but this is
+      // defensive in case that changes.
+      for (const r of res.results) {
+        const data = await r.data();
+        for (const sub of data.sub_results || []) {
+          const id = listingIdFromUrl(sub.url);
+          if (id) ids.add(id);
+        }
+      }
+      state.searchMatches = ids;
+      writeURL();
+      apply();
+    };
+
+    if (searchInput) {
+      if (state.q) searchInput.value = state.q;
+      let timer = null;
+      searchInput.addEventListener("input", (e) => {
+        const v = e.target.value;
+        clearTimeout(timer);
+        timer = setTimeout(() => runSearch(v), 150);
+      });
+      if (state.q && pagefind) await runSearch(state.q);
+    }
+
     apply();
   })();
 </script>
@@ -323,6 +412,29 @@ const totalCount = listings.length;
     max-width: 64rem;
     display: grid;
     gap: 0.75rem;
+  }
+
+  .search-row {
+    display: grid;
+    gap: 0.25rem;
+  }
+
+  .search-label {
+    font-weight: 600;
+    font-size: 0.9rem;
+  }
+
+  .search-input {
+    padding: 0.5rem 0.75rem;
+    font-size: 1rem;
+    border: 1px solid var(--color-border-strong);
+    border-radius: 6px;
+    background: #fff;
+  }
+
+  .search-input:focus-visible {
+    outline: 2px solid #005fcc;
+    outline-offset: 2px;
   }
 
   .filter-group {

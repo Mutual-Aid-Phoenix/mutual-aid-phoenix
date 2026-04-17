@@ -70,6 +70,8 @@
     "heading": "Recursos",
     "empty": "Ningún recurso coincide con tus filtros.",
     "filters_label": "Filtros",
+    "search_label": "Buscar recursos",
+    "search_placeholder": "Buscar por nombre, descripción o ubicación",
     "filter_region_legend": "Filtrar por región",
     "filter_type_legend": "Filtrar por tipo de recurso",
     "clear_filters": "Borrar filtros",

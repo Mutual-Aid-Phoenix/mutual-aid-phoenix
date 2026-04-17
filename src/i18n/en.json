@@ -70,6 +70,8 @@
     "heading": "Resources",
     "empty": "No resources match your filters.",
     "filters_label": "Filters",
+    "search_label": "Search listings",
+    "search_placeholder": "Search by name, description, or location",
     "filter_region_legend": "Filter by region",
     "filter_type_legend": "Filter by resource type",
     "clear_filters": "Clear filters",
