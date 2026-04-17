@@ -58,7 +58,7 @@ See [ANALYSIS.md](./ANALYSIS.md) for the full options and tradeoffs behind these
   - Decap lives as static files at `public/admin/index.html` + `public/admin/config.yml`, loading Decap's JS from its CDN.
   - All user-facing strings (nav, buttons, copy) must live in translation files or content frontmatter from day one, not hard-coded in `.astro` components, so the CMS can reach them.
   - Decap's config schema must be kept in sync with the Astro content-collection Zod schema — two places to update when fields change. Document this in CONTRIBUTING.md.
-  - Listings commits default to PRs for moderation (Decap's "editorial workflow"); page-content / translation commits can go direct-to-`main` for faster iteration. Configurable per collection.
+  - All Decap collections (listings, pages, translations) commit **direct-to-`main`** — no editorial workflow, no PR review. Chosen 2026-04-17 for faster iteration: the volunteer pool is small and trusted, the Zod schema enforces correctness at build time, and `git revert` is always available if something bad lands. If moderation becomes necessary later, flip `publish_mode: editorial_workflow` back on per collection.
   - Geocoding helper ships as a separate page for v1 (see geocoding decision below). Upgrade path: reimplement as an inline custom widget via `CMS.registerWidget` — this is the main capability we gained by switching from Sveltia, but not worth delaying launch for.
   - Contact-form backend uses a separate GitHub App (for server-side Issue creation); unchanged.
 

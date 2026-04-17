@@ -14,7 +14,7 @@ const { locale } = Astro.params as { locale: Locale };
 const turnstileSiteKey = import.meta.env.PUBLIC_TURNSTILE_SITE_KEY ?? "";
 const backendReady = Boolean(turnstileSiteKey);
 
-const issuesUrl = "https://github.com/kyle-smith/mutual-aid-phoenix/issues/new";
+const issuesUrl = "https://github.com/Mutual-Aid-Phoenix/mutual-aid-phoenix/issues/new";
 
 const strings = {
   error_generic: t(locale, "contact.error_generic"),

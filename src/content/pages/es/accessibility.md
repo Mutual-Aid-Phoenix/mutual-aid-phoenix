@@ -11,7 +11,7 @@ Si algo en este sitio te impide hacer lo que necesitas, queremos saberlo. Tu rep
 ## Cómo reportar una barrera
 
 - Usa la [página de Contacto](/es/contact/) para enviarnos un mensaje. Puedes enviar comentarios sin dejar tu nombre ni correo electrónico.
-- Si prefieres, abre un issue en nuestro [repositorio de GitHub](https://github.com/kyle-smith/mutual-aid-phoenix/issues/new).
+- Si prefieres, abre un issue en nuestro [repositorio de GitHub](https://github.com/Mutual-Aid-Phoenix/mutual-aid-phoenix/issues/new).
 
 Cuando nos contactes, nos ayuda saber:
 
@@ -51,7 +51,7 @@ Antes de cada lanzamiento ejecutamos:
 - Pruebas manuales con lectores de pantalla: VoiceOver (Safari) y NVDA (Firefox).
 - Auditorías de Lighthouse apuntando a ≥90 en la categoría de Accesibilidad.
 
-Las auditorías automatizadas en el navegador están en el plan (consulta nuestro [plan de implementación](https://github.com/kyle-smith/mutual-aid-phoenix/blob/main/PLAN.md)). Hasta entonces, los reportes de las personas que usan el sitio son nuestra mejor señal.
+Las auditorías automatizadas en el navegador están en el plan (consulta nuestro [plan de implementación](https://github.com/Mutual-Aid-Phoenix/mutual-aid-phoenix/blob/main/PLAN.md)). Hasta entonces, los reportes de las personas que usan el sitio son nuestra mejor señal.
 
 ## Estándares y alcance
 

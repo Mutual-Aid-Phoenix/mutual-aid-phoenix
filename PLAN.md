@@ -123,13 +123,13 @@ Goal: round out the site with Home, Contact, and Accessibility Statement.
 
 Goal: volunteers can add/edit listings and page content from a browser without touching code, and can geocode addresses without an API key.
 
-- [ ] Create a GitHub OAuth App (GitHub → Settings → Developer settings → OAuth Apps). Callback URL: `https://mutual-aid-phoenix.pages.dev/api/auth/callback`. Client ID goes in `public/admin/config.yml`.
-- [ ] Store the client secret: `pnpm wrangler pages secret put OAUTH_CLIENT_SECRET --project-name=mutual-aid-phoenix`.
+- [x] Create a GitHub OAuth App (GitHub → Settings → Developer settings → OAuth Apps). Callback URL: `https://mutual-aid-phoenix.pages.dev/api/auth/callback`. Client ID goes in `public/admin/config.yml`.
+- [x] Store the client secret: `pnpm wrangler pages secret put OAUTH_CLIENT_SECRET --project-name=mutual-aid-phoenix`.
 - [ ] Write the OAuth proxy at `functions/api/auth.ts` (+ `functions/api/auth/callback.ts`): redirects to GitHub's `authorize` endpoint, receives the code on callback, exchanges it for an access token using the client secret, and returns the token to the Decap popup via `postMessage`. ~30 lines.
-- [ ] Drop `public/admin/index.html` (loads Decap's JS from its CDN) and `public/admin/config.yml` into the repo.
-- [ ] In `config.yml`, define collections:
-  - **Listings** — maps to `src/content/listings/`, form fields mirror the Zod schema, commits default to PR workflow (Decap editorial workflow).
-  - **Pages** — Home and Accessibility Statement, commits direct to `main`.
+- [ ] Drop `public/admin/index.html` (loads Decap's JS from its CDN). `public/admin/config.yml` already landed with the backend block; collections + commit mode get filled in next.
+- [ ] In `config.yml`, define collections. **All collections commit direct-to-`main`** — no editorial workflow, no PR review. Fast iteration is the goal.
+  - **Listings** — maps to `src/content/listings/`, form fields mirror the Zod schema.
+  - **Pages** — Home and Accessibility Statement.
   - **Translations** — `src/i18n/*.json`, with Decap's i18n mode enabled for per-locale editing.
 - [ ] `pnpm ship`; verify the OAuth flow end-to-end: visit `/admin/`, sign in with GitHub, open and save a listing.
 - [ ] **Build the geocoding helper page** at `public/admin/geocode.html`:
@@ -140,10 +140,10 @@ Goal: volunteers can add/edit listings and page content from a browser without t
   - [ ] Displays the validated `lat`, `lng` values ready to copy into the Decap listing form.
   - [ ] Fallback affordance: a "I'll enter coords manually" field so editors can paste in lat/lng from any source (Google Maps right-click, GPS reading, etc.).
   - Future upgrade path: reimplement as an inline custom widget via `CMS.registerWidget`. Noted in CONTRIBUTING.md as a wanted enhancement; out of scope for v1.
-- [ ] Test with a secondary GitHub account (not an owner) to confirm the full volunteer experience: sign in → add a new listing → use geocode helper → paste coords → save → PR opens. **Note:** until we wire up GitHub→Pages auto-deploys (deferred), someone with deploy access still needs to `pnpm ship` for volunteer edits to go live.
+- [ ] Test with a secondary GitHub account (not an owner) to confirm the full volunteer experience: sign in → add a new listing → use geocode helper → paste coords → save → commit lands on `main`. **Note:** until we wire up GitHub→Pages auto-deploys (deferred), someone with deploy access still needs to `pnpm ship` for volunteer edits to go live.
 - [ ] Write `CONTRIBUTING.md` documenting: how to get access, the listings schema, moderation expectations, the geocode helper workflow, the manual tile refresh, the manual deploy step, and the note that Decap's config must stay in sync with the Zod schema.
 
-**Exit criteria:** A non-owner volunteer can sign in, create a new listing (including geocoding its address via the helper), open a PR. A maintainer's `pnpm ship` publishes the change. The bbox check catches bad coordinates at build time.
+**Exit criteria:** A non-owner volunteer can sign in, create a new listing (including geocoding its address via the helper), and save — the commit lands directly on `main`. A maintainer's `pnpm ship` publishes the change. The bbox check catches bad coordinates at build time.
 
 ---
 
