@@ -44,7 +44,7 @@ flowchart TB
     subgraph Ext["External"]
         Proto["Protomaps<br/>daily global .pmtiles"]:::ext
         Resend["Resend<br/>transactional email"]:::ext
-        Inbox["Recipient inbox<br/>(configured in site.json)"]:::ext
+        Inbox["Recipient inbox<br/>(CONTACT_RECIPIENT_EMAIL env var;<br/>fan-out via inbox forwarding)"]:::ext
     end
 
     Visitor --> Site
@@ -186,10 +186,10 @@ sequenceDiagram
     V->>Form: submit
 
     Form->>F: POST form-data {name?, email?, feedback, token}
-    F->>F: validate payload shape<br/>(read recipient from site.json)
+    F->>F: validate payload shape<br/>(read recipient from env var)
     F->>TAPI: verify token (server-side)
     TAPI-->>F: valid
-    F->>R: POST /emails<br/>(from: onboarding@resend.dev,<br/>to: site.contact_recipient_email,<br/>reply_to: submitter email if given)
+    F->>R: POST /emails<br/>(from: onboarding@resend.dev,<br/>to: env.CONTACT_RECIPIENT_EMAIL,<br/>reply_to: submitter email if given)
     R-->>F: 200 + message id
     R-->>Inbox: deliver email
     F-->>Form: 200 OK

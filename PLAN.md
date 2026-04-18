@@ -161,9 +161,9 @@ Goal: feedback lands in a human inbox via email. No public issue tracker; no thi
 - [ ] Register for **Resend** (free tier: 100 emails/day, 3000/month — ample for v1). Use their shared sandbox sender `onboarding@resend.dev` to start — no custom-domain DNS required for launch. Upgrading to a real sender domain is a Phase 8/post-launch concern.
 - [ ] Store the API key: `pnpm wrangler pages secret put RESEND_API_KEY`.
 - [ ] Register a Turnstile site (CF dashboard). Site key goes inline in the form (via `PUBLIC_TURNSTILE_SITE_KEY`); `pnpm wrangler pages secret put TURNSTILE_SECRET` for the secret.
-- [x] **Make the recipient email editable via the CMS.** Add a Decap-managed site-settings file at `src/config/site.json` with (at least) a `contact_recipient_email` field. Seed value: `smith.kyle.r93@gmail.com`. Add a new files-collection entry in `public/admin/config.yml` so volunteers with admin access can edit it. The Function imports the JSON at build time — changing the recipient is a Decap edit → auto-deploy → next submission routes to the new address, no code change required.
+- [x] **Store the recipient email as a Pages env var** (`CONTACT_RECIPIENT_EMAIL`). Originally planned as a CMS-editable `src/config/site.json` entry, but Resend's sandbox sender can only deliver to the account-owner email, so letting volunteers edit the recipient would silently break delivery. Fan-out to other humans is handled by a Gmail forward rule on the recipient inbox. Revisit once we verify a custom sender domain (post-launch).
 - [x] Write `functions/api/contact.ts`:
-  - [x] Imports `src/config/site.json` to resolve the recipient.
+  - [x] Reads `env.CONTACT_RECIPIENT_EMAIL` at request time to resolve the recipient.
   - [x] Validates payload (required `feedback` field; optional name/email).
   - [x] Verifies the Turnstile token server-side.
   - [x] POSTs to Resend's `/emails` endpoint with a plaintext body containing the submission (feedback, plus name/email if given, plus submission timestamp).

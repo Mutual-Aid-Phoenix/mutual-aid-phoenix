@@ -1,21 +1,20 @@
 // Contact-form backend. Validates the submission, verifies the
 // Turnstile token server-side, and emails the feedback to the
-// recipient configured in src/config/site.json.
+// recipient configured via Cloudflare Pages env vars.
 //
 // Env bindings (set via `pnpm wrangler pages secret put ...`):
-//   - TURNSTILE_SECRET — paired with the public site key used in
-//                        src/pages/[locale]/contact.astro.
-//   - RESEND_API_KEY   — https://resend.com/api-keys
-//
-// Recipient is resolved at build time via a JSON import so that
-// volunteers can change it through the CMS (Decap commits to
-// src/config/site.json → auto-deploy → next request picks it up).
-
-import siteConfig from "../../src/config/site.json";
+//   - TURNSTILE_SECRET          — paired with the public site key used
+//                                 in src/pages/[locale]/contact.astro.
+//   - RESEND_API_KEY            — https://resend.com/api-keys
+//   - CONTACT_RECIPIENT_EMAIL   — where to deliver feedback. With the
+//                                 Resend sandbox sender this must be
+//                                 the account-owner email; fan-out to
+//                                 other inboxes via a Gmail forward rule.
 
 type Env = {
   TURNSTILE_SECRET: string;
   RESEND_API_KEY: string;
+  CONTACT_RECIPIENT_EMAIL: string;
 };
 
 type PagesContext = {
@@ -64,13 +63,14 @@ export const onRequestPost = async ({
   request,
   env,
 }: PagesContext): Promise<Response> => {
-  const recipient = siteConfig.contact_recipient_email;
-  if (!recipient) {
+  if (
+    !env.TURNSTILE_SECRET ||
+    !env.RESEND_API_KEY ||
+    !env.CONTACT_RECIPIENT_EMAIL
+  ) {
     return json({ error: "server_misconfigured" }, 500);
   }
-  if (!env.TURNSTILE_SECRET || !env.RESEND_API_KEY) {
-    return json({ error: "server_misconfigured" }, 500);
-  }
+  const recipient = env.CONTACT_RECIPIENT_EMAIL;
 
   let form: FormData;
   try {
