@@ -202,8 +202,9 @@ Design goals, in priority order:
 
 | Choice | Why |
 |---|---|
-| **Cloudflare Pages + a Pages Function** that posts to an email or a GitHub Issue | Free. No vendor limits. Can auto-open an Issue labeled `needs-review` so moderators see it in one place. |
-| **Alternative: Formspree** (50 submissions/month free) or **Web3Forms** (unlimited free) | Drop-in HTML form → email, no backend. Web3Forms has no submission cap on free tier, which matters. |
+| **Cloudflare Pages Function → Resend** (chosen; see DECISIONS.md) | Submissions go to a normal inbox, not a public tracker. Resend's free tier (100/day, 3000/month) more than covers volunteer-site volume; its shared sender works without DNS setup. Cloudflare itself has no outbound-email product — Email Routing only receives, and MailChannels ended its free tier in 2024. |
+| **Originally considered: Pages Function → GitHub Issue** | Rejected 2026-04-18 — we don't want community feedback posted to a public repo and don't want to point anyone at our issue tracker. |
+| **Alternative: Formspree** (50 submissions/month free) or **Web3Forms** (unlimited free) | Drop-in HTML form → email, no backend. Viable fallback if Resend ever changes terms. |
 | **Honeypot + Cloudflare Turnstile** (free, privacy-respecting CAPTCHA) | Keeps spam from eating quota without hurting a11y or tracking users. |
 
 ### Internationalization (i18n)

@@ -110,10 +110,9 @@
     "submit": "Enviar comentarios",
     "sending": "Enviando…",
     "success": "Gracias — recibimos tu mensaje. Te responderemos si dejaste un correo.",
-    "error_generic": "Ocurrió un error al enviar tu mensaje. También puedes abrir un issue en GitHub.",
+    "error_generic": "Ocurrió un error al enviar tu mensaje. Inténtalo de nuevo en un momento.",
     "error_validation_feedback": "Escribe un mensaje antes de enviar.",
-    "issues_fallback": "Abrir un issue en GitHub",
-    "backend_pending_notice": "El backend del formulario de contacto aún está en construcción. Mientras tanto, abre un issue en GitHub.",
+    "backend_pending_notice": "El formulario de contacto aún no está activo — vuelve pronto.",
     "required_hint": "Los campos marcados como obligatorios deben completarse."
   },
   "footer": {

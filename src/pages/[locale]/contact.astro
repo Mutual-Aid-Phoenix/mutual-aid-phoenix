@@ -8,13 +8,10 @@ export async function getStaticPaths() {
 
 const { locale } = Astro.params as { locale: Locale };
 
-// Phase 6 registers a Turnstile site and sets this env var at build time.
-// Until then the widget slot stays empty and the form surfaces a notice
-// pointing users to GitHub issues.
+// Set at build time once Turnstile is registered. Until then the widget
+// slot stays empty and the form surfaces a backend-pending notice.
 const turnstileSiteKey = import.meta.env.PUBLIC_TURNSTILE_SITE_KEY ?? "";
 const backendReady = Boolean(turnstileSiteKey);
-
-const issuesUrl = "https://github.com/Mutual-Aid-Phoenix/mutual-aid-phoenix/issues/new";
 
 const strings = {
   error_generic: t(locale, "contact.error_generic"),
@@ -22,7 +19,6 @@ const strings = {
   sending: t(locale, "contact.sending"),
   submit: t(locale, "contact.submit"),
   success: t(locale, "contact.success"),
-  issues_fallback: t(locale, "contact.issues_fallback"),
 };
 ---
 
@@ -39,14 +35,6 @@ const strings = {
       !backendReady && (
         <div class="pending-notice" role="note">
           <p>{t(locale, "contact.backend_pending_notice")}</p>
-          <a
-            class="issues-link"
-            href={issuesUrl}
-            target="_blank"
-            rel="noopener noreferrer"
-          >
-            {t(locale, "contact.issues_fallback")} →
-          </a>
         </div>
       )
     }
@@ -58,7 +46,6 @@ const strings = {
       method="post"
       novalidate
       data-strings={JSON.stringify(strings)}
-      data-issues-url={issuesUrl}
     >
       <p class="required-hint">{t(locale, "contact.required_hint")}</p>
 
@@ -123,14 +110,6 @@ const strings = {
         </button>
         <p class="form-status" role="status" aria-live="polite" data-form-status></p>
       </div>
-
-      <noscript>
-        <p class="noscript-notice">
-          <a href={issuesUrl} target="_blank" rel="noopener noreferrer">
-            {t(locale, "contact.issues_fallback")}
-          </a>
-        </p>
-      </noscript>
     </form>
   </section>
 
@@ -152,13 +131,11 @@ const strings = {
     sending: string;
     submit: string;
     success: string;
-    issues_fallback: string;
   };
 
   const form = document.getElementById("contact-form") as HTMLFormElement | null;
   if (form) {
     const strings = JSON.parse(form.dataset.strings ?? "{}") as Strings;
-    const issuesUrl = form.dataset.issuesUrl ?? "";
     const status = form.querySelector<HTMLParagraphElement>("[data-form-status]");
     const feedbackInput = form.querySelector<HTMLTextAreaElement>(
       "#contact-feedback",
@@ -213,17 +190,7 @@ const strings = {
         status.textContent = strings.success;
         status.classList.add("is-success");
       } catch {
-        // Graceful fallback when the Pages Function isn't live yet or
-        // returns an error: surface the issue-tracker link so the user's
-        // effort isn't wasted.
-        status.innerHTML = "";
-        status.textContent = `${strings.error_generic} `;
-        const a = document.createElement("a");
-        a.href = issuesUrl;
-        a.target = "_blank";
-        a.rel = "noopener noreferrer";
-        a.textContent = strings.issues_fallback;
-        status.appendChild(a);
+        status.textContent = strings.error_generic;
         status.classList.add("is-error");
       } finally {
         submitBtn.disabled = false;
@@ -261,13 +228,8 @@ const strings = {
   }
 
   .pending-notice p {
-    margin: 0 0 0.5rem;
+    margin: 0;
     font-size: 0.9rem;
-  }
-
-  .issues-link {
-    font-weight: 600;
-    color: var(--stale-fg);
   }
 
   .contact-form {
@@ -380,10 +342,5 @@ const strings = {
   .form-status.is-error {
     color: var(--error-fg);
     font-weight: 500;
-  }
-
-  .noscript-notice {
-    margin: 0.5rem 0 0;
-    font-size: 0.9rem;
   }
 </style>

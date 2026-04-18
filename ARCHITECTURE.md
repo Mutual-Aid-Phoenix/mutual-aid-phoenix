@@ -38,13 +38,13 @@ flowchart TB
     subgraph GH["GitHub"]
         Repo["Repo<br/>Astro code +<br/>listings + i18n files"]:::gh
         OAuthApp["GitHub OAuth App<br/>volunteer login"]:::gh
-        GHApp["GitHub App<br/>server-side issue creation"]:::gh
-        Issues["Issues<br/>feedback queue"]:::gh
         Actions["Actions<br/>CI + monthly cron"]:::gh
     end
 
     subgraph Ext["External"]
         Proto["Protomaps<br/>daily global .pmtiles"]:::ext
+        Resend["Resend<br/>transactional email"]:::ext
+        Inbox["Recipient inbox<br/>(configured in site.json)"]:::ext
     end
 
     Visitor --> Site
@@ -59,8 +59,8 @@ flowchart TB
 
     Site -- "POST /api/contact" --> ContactFn
     ContactFn -- verify token --> TurnstileAPI
-    ContactFn -- "mint installation<br/>token via GHApp key" --> GHApp
-    ContactFn -- "open Issue" --> Issues
+    ContactFn -- "POST /emails" --> Resend
+    Resend -- deliver --> Inbox
 
     Decap -- "start OAuth" --> AuthFn
     AuthFn -- "authorize + exchange<br/>code for token" --> OAuthApp
@@ -177,19 +177,21 @@ sequenceDiagram
     participant TS as Turnstile (browser)
     participant F as Pages Function<br/>/api/contact
     participant TAPI as Turnstile API
-    participant GH as GitHub API (App token)
+    participant R as Resend API
+    participant Inbox as Recipient inbox
 
     V->>Form: fill feedback form
     Form->>TS: render challenge
     TS-->>Form: client token
     V->>Form: submit
 
-    Form->>F: POST JSON {name?, email?, feedback, token}
-    F->>F: validate payload shape
+    Form->>F: POST form-data {name?, email?, feedback, token}
+    F->>F: validate payload shape<br/>(read recipient from site.json)
     F->>TAPI: verify token (server-side)
     TAPI-->>F: valid
-    F->>GH: create Issue<br/>labels: feedback, needs-triage
-    GH-->>F: issue URL
+    F->>R: POST /emails<br/>(from: onboarding@resend.dev,<br/>to: site.contact_recipient_email,<br/>reply_to: submitter email if given)
+    R-->>F: 200 + message id
+    R-->>Inbox: deliver email
     F-->>Form: 200 OK
     Form-->>V: "thanks, we got it"
 ```
@@ -224,16 +226,18 @@ sequenceDiagram
 
 ## Trust boundaries & secrets
 
-- **No user PII stored anywhere.** The contact form submitter can stay anonymous. Any name/email they provide lives in the GitHub Issue body, visible only to repo collaborators.
-- **Two shared secrets**, both encrypted Cloudflare Pages env vars, both scoped to one repo and rotatable from GitHub's UI in seconds:
-  1. **GitHub App private key** — used server-side by `functions/api/contact.ts` to mint installation tokens and open feedback Issues.
-  2. **GitHub OAuth App client secret** — used server-side by `functions/api/auth.ts` to exchange volunteer login codes for user access tokens.
+- **No user PII stored by the site.** The contact form submitter can stay anonymous. Any name/email they provide is emailed once to the configured recipient inbox and never persisted by our infrastructure.
+- **Three shared secrets**, all encrypted Cloudflare Pages env vars, all rotatable in seconds:
+  1. **`RESEND_API_KEY`** — used server-side by `functions/api/contact.ts` to POST feedback emails to Resend.
+  2. **`TURNSTILE_SECRET`** — used server-side by `functions/api/contact.ts` to verify the client-issued Turnstile token before sending.
+  3. **GitHub OAuth App client secret** — used server-side by `functions/api/auth.ts` to exchange volunteer login codes for user access tokens.
+- **`PUBLIC_TURNSTILE_SITE_KEY`** is a plain (non-secret) Pages env var, baked into the built HTML for the Turnstile widget.
 - **R2 bucket** is public-read for the tile file only. No write path reachable from the browser.
 - **Cloudflare Web Analytics** is cookieless and stores no PII — no cookie banner required.
 
 ## What this architecture buys us
 
 - **Zero always-on servers.** The only code that runs per-request is the contact Pages Function; everything else is static files served from the edge.
-- **Compromise blast radius is small.** Losing either secret = rotate and (worst case) repo rewrite — bad but recoverable. There's no user database to leak.
+- **Compromise blast radius is small.** Losing a secret = rotate in the issuer (Resend / Cloudflare Turnstile / GitHub) and update the Pages env var. There's no user database to leak.
 - **Costs don't scale with traffic.** CF Pages bandwidth is unlimited, R2 egress is free, Pages Functions have a generous free request quota. A viral moment doesn't produce a bill.
 - **Every component is swappable.** R2 → any S3-compatible store. Protomaps → MapTiler. Decap → direct git editing or Sveltia. GitHub → GitLab. No component is load-bearing beyond what it directly does.

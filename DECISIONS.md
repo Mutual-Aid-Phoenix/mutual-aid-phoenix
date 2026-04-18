@@ -61,7 +61,7 @@ See [ANALYSIS.md](./ANALYSIS.md) for the full options and tradeoffs behind these
   - All Decap collections (listings, pages) commit **direct-to-`main`** — no editorial workflow, no PR review. Chosen 2026-04-17 for faster iteration: the volunteer pool is small and trusted, the Zod schema enforces correctness at build time, and `git revert` is always available if something bad lands. If moderation becomes necessary later, flip `publish_mode: editorial_workflow` back on per collection.
   - UI translation strings (`src/i18n/*.json`) are edited directly in the repo for v1 — not exposed as a Decap collection. A structured key/value editor widget is a possible future enhancement if volunteers need to change UI chrome without a PR.
   - Geocoding helper ships as a separate page for v1 (see geocoding decision below). Upgrade path: reimplement as an inline custom widget via `CMS.registerWidget` — this is the main capability we gained by switching from Sveltia, but not worth delaying launch for.
-  - Contact-form backend uses a separate GitHub App (for server-side Issue creation); unchanged.
+  - Contact-form backend uses Resend (email delivery); see the dedicated decision below.
 
 ### No custom domain at launch
 - **Decided:** 2026-04-16
@@ -69,7 +69,7 @@ See [ANALYSIS.md](./ANALYSIS.md) for the full options and tradeoffs behind these
 - **Why:** Removes the only recurring cost from the project (~$11/year) and avoids domain configuration work during initial build. Custom domain can be added at any time without affecting the codebase — it's purely a Cloudflare dashboard change.
 - **Implications:**
   - Zero recurring cost at launch. Project runs entirely on free tiers.
-  - Cloudflare Email Routing requires a custom domain, so it's off the table for now. Contact-form submissions go to a **GitHub Issue** via a Pages Function instead of email. Bonus: this is actually better for a volunteer-run project — feedback lands in a shared, triageable queue rather than a single person's inbox.
+  - Cloudflare Email Routing only receives mail, so sending must go through a third-party HTTP API. See the "Contact-form email" decision below for the current choice.
   - R2 tile file is served from R2's default public URL (e.g., `pub-<hash>.r2.dev`) instead of a custom subdomain. Works identically; the URL is just uglier in DevTools.
   - Social share preview images still work — OG tags just point to the `pages.dev` URL.
   - When we do add a custom domain later: update Pages domain settings, update canonical URLs in site metadata, update R2 public URL if we front it with a subdomain. ~30-minute change.
@@ -85,6 +85,19 @@ See [ANALYSIS.md](./ANALYSIS.md) for the full options and tradeoffs behind these
   - **Manual override is always available**: editor can paste in lat/lng they got another way (e.g., right-click in Google Maps → "What's here" gives coordinates without an API key). Necessary for ad-hoc community fridges, empty lots, and addresses Nominatim can't resolve.
   - CI adds a bbox check: any listing with `lat`/`lng` outside the Greater Phoenix metro bounding box fails the build. Catches typos and misgeocoded entries automatically.
   - Helper page must set an identifying `Referer` (Decap loads it from our origin, so the Pages domain serves as identification) and respect Nominatim's 1 req/sec usage policy.
+
+### Contact-form email via Resend (supersedes GitHub Issue)
+- **Decided:** 2026-04-18
+- **Choice:** Contact-form submissions are emailed via [Resend](https://resend.com) to a recipient address configured in `src/config/site.json` (default: `smith.kyle.r93@gmail.com`). The JSON is Decap-editable through a "Site settings" entry, so volunteers can redirect feedback without a code change.
+- **Why:** The original plan (submissions → GitHub Issue) assumed a triageable shared queue, but in practice we don't want community feedback posted to a public repo, nor do we want to direct anyone to our issue tracker. Email keeps submissions private and goes to a normal inbox. Cloudflare has no first-party outbound-email product (Email Routing only receives; MailChannels ended its free tier in mid-2024), so an HTTP email API is unavoidable. Resend's free tier (100/day, 3000/month) covers a small volunteer site indefinitely, and their shared sandbox sender (`onboarding@resend.dev`) works without DNS verification — no custom domain required at launch.
+- **Implications:**
+  - `functions/api/contact.ts` validates + verifies Turnstile + POSTs to Resend's `/emails` endpoint. The recipient is imported from `src/config/site.json` at build time.
+  - New Decap collection entry ("Site settings") for editing the recipient email. Auto-deploy via `.github/workflows/deploy.yml` picks up changes on the next commit.
+  - Secrets: `RESEND_API_KEY` (Pages Secret) and `TURNSTILE_SECRET` (Pages Secret). `PUBLIC_TURNSTILE_SITE_KEY` as a plain env var.
+  - **No GitHub-issues escape hatch anywhere.** All mentions ("Open a GitHub issue" fallback link, the noscript fallback, the pending-notice link) are removed from the frontend and the i18n files.
+  - ARCHITECTURE.md flowchart and sequence diagram updated to swap `GHApp → Issues` for `Resend`.
+  - The "GitHub App for contact form" implication in the Decap decision is obsolete — no server-side GitHub App is created.
+  - If submission volume ever outgrows the free tier or we add a custom domain, we can verify a sender domain on Resend (DNS-only; code unchanged).
 
 ---
 

@@ -280,6 +280,36 @@ collections:
           verification" badge.
 
   # -------------------------------------------------------------------
+  # Site settings — one-off config editable by admins. Routed through a
+  # plain JSON file at src/config/site.json that the contact-form Pages
+  # Function imports at build time. Editing this entry commits to main,
+  # auto-deploys via the deploy workflow, and the new values take
+  # effect on the next request.
+  # -------------------------------------------------------------------
+  - name: site_settings
+    label: Site settings
+    label_singular: Site setting
+    description: >
+      Site-wide configuration. Volunteer-editable; changes go live on
+      the next auto-deploy.
+    editor:
+      preview: false
+    files:
+      - label: Contact form
+        name: contact_form
+        file: src/config/site.json
+        format: json
+        fields:
+          - label: Contact form recipient email
+            name: contact_recipient_email
+            widget: string
+            pattern:
+              ["^[^@\\s]+@[^@\\s]+\\.[^@\\s]+$", "Must be a valid email address"]
+            hint: >
+              Where contact-form submissions are emailed. Changing this
+              takes effect after the next deploy (~1–2 min after save).
+
+  # -------------------------------------------------------------------
   # Pages — one entry per (page × locale).
   # Modeled as a files-collection (not folder) so each locale variant is
   # its own explicit entry. Locale lives only in the file path; there is

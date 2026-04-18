@@ -110,10 +110,9 @@
     "submit": "Send feedback",
     "sending": "Sending…",
     "success": "Thanks — your message was received. We'll follow up if you left an email.",
-    "error_generic": "Something went wrong sending your message. You can file it as a GitHub issue instead.",
+    "error_generic": "Something went wrong sending your message. Please try again in a moment.",
     "error_validation_feedback": "Please write a message before sending.",
-    "issues_fallback": "Open a GitHub issue",
-    "backend_pending_notice": "The contact form backend is still being built. In the meantime please open a GitHub issue.",
+    "backend_pending_notice": "The contact form isn't live yet — please check back soon.",
     "required_hint": "Fields marked required must be filled in."
   },
   "footer": {

@@ -156,20 +156,28 @@ Goal: a volunteer can add a new listing without being overwhelmed by optional fi
 
 ## Phase 6 — Contact form backend
 
-Goal: feedback lands in a triageable queue.
+Goal: feedback lands in a human inbox via email. No public issue tracker; no third-party queue. Recipient is editable by volunteers without touching code.
 
-- [ ] Create a GitHub App (distinct from the OAuth App in Phase 5). Permissions: issues write, metadata read. Install on the repo.
-- [ ] Store credentials: `pnpm wrangler pages secret put GITHUB_APP_ID` and `pnpm wrangler pages secret put GITHUB_APP_PRIVATE_KEY`.
-- [ ] Register a Turnstile site (CF dashboard). Site key goes inline in the form; `pnpm wrangler pages secret put TURNSTILE_SECRET` for the secret.
-- [ ] Write `functions/api/contact.ts`:
-  - [ ] Validates payload (required `feedback` field; optional name/email).
-  - [ ] Verifies the Turnstile token server-side.
-  - [ ] Mints an installation token from the GitHub App private key, opens an Issue in the repo labeled `feedback` and `needs-triage`.
-  - [ ] Returns a success/failure JSON response.
+- [ ] Register for **Resend** (free tier: 100 emails/day, 3000/month — ample for v1). Use their shared sandbox sender `onboarding@resend.dev` to start — no custom-domain DNS required for launch. Upgrading to a real sender domain is a Phase 8/post-launch concern.
+- [ ] Store the API key: `pnpm wrangler pages secret put RESEND_API_KEY`.
+- [ ] Register a Turnstile site (CF dashboard). Site key goes inline in the form (via `PUBLIC_TURNSTILE_SITE_KEY`); `pnpm wrangler pages secret put TURNSTILE_SECRET` for the secret.
+- [x] **Make the recipient email editable via the CMS.** Add a Decap-managed site-settings file at `src/config/site.json` with (at least) a `contact_recipient_email` field. Seed value: `smith.kyle.r93@gmail.com`. Add a new files-collection entry in `public/admin/config.yml` so volunteers with admin access can edit it. The Function imports the JSON at build time — changing the recipient is a Decap edit → auto-deploy → next submission routes to the new address, no code change required.
+- [x] Write `functions/api/contact.ts`:
+  - [x] Imports `src/config/site.json` to resolve the recipient.
+  - [x] Validates payload (required `feedback` field; optional name/email).
+  - [x] Verifies the Turnstile token server-side.
+  - [x] POSTs to Resend's `/emails` endpoint with a plaintext body containing the submission (feedback, plus name/email if given, plus submission timestamp).
+  - [x] Returns a success/failure JSON response.
 - [ ] Add Cloudflare Rate Limiting rules on the function URL (free tier covers this).
-- [ ] Frontend: progressive enhancement — the form posts to the Function; if JS fails, show a graceful error linking to the repo's Issues page as a fallback.
+- [x] Frontend: progressive enhancement — form posts to the Function; on failure, show a graceful in-page error. **No GitHub-issues escape hatch** — not in the success copy, not in the error copy, not in the pending notice.
+- [x] Strip the GitHub-issues references that seeded earlier phases: `contact.issues_fallback` and `contact.backend_pending_notice` in `src/i18n/{en,es}.json`, and the `{!backendReady && …}` issues-link block in `src/pages/[locale]/contact.astro`.
 
-**Exit criteria:** Submitting the form opens a correctly labeled GitHub Issue. Spam submissions are blocked by Turnstile + rate limiting.
+**Exit criteria:** Submitting the form delivers an email to the configured recipient. Spam submissions are blocked by Turnstile + rate limiting. Editing `contact_recipient_email` via Decap → commit → auto-deploy routes subsequent submissions to the new address with no code change.
+
+**Downstream doc updates (same PR):**
+- [x] `DECISIONS.md` — the "contact form → GitHub Issue" decision gets superseded. Reason: single-maintainer ownership was assumed; shifting to email keeps feedback private and the GitHub repo free of noise.
+- [x] `ARCHITECTURE.md` — system-overview flowchart (drop `GHApp → Issues` link, add `Resend`); sequence diagram for contact submission (swap GitHub Issue create for Resend POST).
+- [x] `ANALYSIS.md` — Part 2's forms recommendation currently cites GitHub Issues; note the swap (ANALYSIS.md is a snapshot, so a brief addendum, not a rewrite).
 
 ---
 
