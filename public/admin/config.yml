@@ -56,13 +56,18 @@ collections:
     folder: src/content/listings
     create: true
     delete: true
-    # The slug becomes the filename. Point at the English name so new
-    # listings land at paths like `roosevelt-community-fridge.md`.
-    # `{{slug}}` alone would look for a literal `slug` field (we don't
-    # have one) and fall back to concatenating every field's stringified
-    # value — with all our object-shaped fields that produced multi-line
-    # filenames full of `object-object` segments.
-    slug: "{{fields.name.en}}"
+    # The slug becomes the filename. We route it through a hidden
+    # `slug` field that's populated by a `preSave` event listener in
+    # custom-widgets.js — it slugifies `name.en` and appends `-2`,
+    # `-3`, etc. on collision so two listings with the same English
+    # name never overwrite each other.
+    #
+    # Why not `{{fields.name.en}}` directly? Decap's slug-template
+    # resolver doesn't reliably drill into the value of a *custom*
+    # widget (our `bilingual` widget is one), so nested paths like
+    # `{{fields.name.en}}` resolve to an empty string and the file
+    # saves as `.md`. Targeting a flat top-level field sidesteps that.
+    slug: "{{fields.slug}}"
     extension: md
     format: yaml-frontmatter
     # Preview pane adds little value here — our custom widgets already
@@ -82,6 +87,11 @@ collections:
     sortable_fields:
       - last_verified_date
     fields:
+      # Hidden slug field — written by the preSave hook in
+      # custom-widgets.js. Never rendered; exists only so the slug
+      # template above (`{{fields.slug}}`) has something to resolve.
+      - { label: Slug, name: slug, widget: hidden, required: false }
+
       # ---------------------------------------------------------------
       # SECTION: Name & Description
       # ---------------------------------------------------------------

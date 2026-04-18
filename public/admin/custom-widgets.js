@@ -1236,6 +1236,127 @@
   CMS.registerWidget("location", LocationControl, LocationPreview);
 
   // ---------------------------------------------------------------------
+  // preSave — populate the hidden `slug` field from `name.en`.
+  //
+  // Decap's slug template (`{{fields.slug}}` in config.yml) reads the
+  // field value that we set here, then uses it as the filename stem.
+  // This runs on both create and edit; we skip edit by bailing out
+  // when `slug` is already populated, which keeps URLs stable once a
+  // listing exists.
+  //
+  // Collision handling: if two listings share the same English name
+  // ("Roosevelt Community Fridge"), the second one becomes
+  // `roosevelt-community-fridge-2`, etc. Existing slugs come from the
+  // Decap Redux store, which is populated when the volunteer opens
+  // the Listings view in the sidebar before clicking "New Listing"
+  // (the common path).
+  // ---------------------------------------------------------------------
+
+  function slugify(str) {
+    if (str == null) return "";
+    return String(str)
+      .normalize("NFKD")
+      .replace(/[\u0300-\u036f]/g, "") // strip combining diacritics
+      .toLowerCase()
+      .replace(/[^a-z0-9]+/g, "-")
+      .replace(/^-+|-+$/g, "")
+      .replace(/-+/g, "-");
+  }
+
+  function getExistingListingSlugs() {
+    try {
+      var store = window.CMS && window.CMS.store;
+      if (!store) return [];
+      var state = store.getState();
+      var entries = state.entries;
+      if (!entries || typeof entries.get !== "function") return [];
+      var entities = entries.get("entities");
+      if (!entities || typeof entities.forEach !== "function") return [];
+      var slugs = [];
+      var prefix = "listings.";
+      entities.forEach(function (_entry, key) {
+        if (typeof key === "string" && key.indexOf(prefix) === 0) {
+          slugs.push(key.slice(prefix.length));
+        }
+      });
+      return slugs;
+    } catch (e) {
+      console.warn("[maph] Could not read existing slugs:", e);
+      return [];
+    }
+  }
+
+  function findUniqueSlug(base, taken, currentId) {
+    var takenSet = Object.create(null);
+    for (var i = 0; i < taken.length; i++) {
+      if (taken[i] !== currentId) takenSet[taken[i]] = true;
+    }
+    if (!takenSet[base]) return base;
+    var n = 2;
+    while (takenSet[base + "-" + n]) n++;
+    return base + "-" + n;
+  }
+
+  // Handler payload shape varies: some Decap versions pass `{ entry,
+  // author }` where `entry` has been `.toJS()`'d to a plain object;
+  // others pass an Immutable Map; others still hand in just the entry.
+  // Small helpers so we don't care which.
+  function pluck(obj, key) {
+    if (obj == null) return undefined;
+    if (typeof obj.get === "function") return obj.get(key);
+    return obj[key];
+  }
+  function pluckIn(obj, path) {
+    var cur = obj;
+    for (var i = 0; i < path.length; i++) {
+      cur = pluck(cur, path[i]);
+      if (cur == null) return undefined;
+    }
+    return cur;
+  }
+
+  CMS.registerEventListener({
+    name: "preSave",
+    handler: function (payload) {
+      var entry = payload && payload.entry ? payload.entry : payload;
+      if (!entry) return;
+
+      var collection = pluck(entry, "collection");
+      if (collection !== "listings") return;
+
+      var data = pluck(entry, "data");
+      if (!data) return;
+
+      var existing = pluck(data, "slug");
+      if (existing && String(existing).trim()) return; // stable on edit
+
+      var nameEn = pluckIn(data, ["name", "en"]);
+      if (!nameEn) {
+        console.warn("[maph preSave] could not read name.en from entry data");
+        return;
+      }
+
+      var base = slugify(nameEn);
+      if (!base) return;
+
+      var currentId = pluck(entry, "slug") || "";
+      var unique = findUniqueSlug(base, getExistingListingSlugs(), currentId);
+      console.log("[maph preSave] slug:", unique, "(base:", base + ")");
+
+      // Return the modified data in whatever shape Decap gave it to us.
+      if (typeof data.set === "function") {
+        return data.set("slug", unique);
+      }
+      var copy = {};
+      for (var k in data) {
+        if (Object.prototype.hasOwnProperty.call(data, k)) copy[k] = data[k];
+      }
+      copy.slug = unique;
+      return copy;
+    },
+  });
+
+  // ---------------------------------------------------------------------
   // Required-field marker — Decap appends "(Optional)" to optional field
   // labels but adds nothing to required ones. Walk the DOM and mark the
   // required ones with a subtle red asterisk so editors don't have to
