@@ -38,13 +38,45 @@
   // BilingualControl — EN/ES paired inputs, flat (no nested card).
   // ---------------------------------------------------------------------
 
-  function BilingualControl(props) {
+  // forwardRef so Decap can attach a ref and invoke our `isValid` on
+  // save. Without this, the widget's value object is truthy even when
+  // `es` is blank and Decap's default "required = truthy" check passes,
+  // letting invalid entries reach the Zod build step.
+  var BilingualControl = React.forwardRef(function BilingualControl(
+    props,
+    ref,
+  ) {
     var value = toPlain(props.value) || {};
     var onChange = props.onChange;
     var field = props.field;
     var variant = field.get("variant") || "string"; // "string" | "text"
+    var required = field.get("required") !== false;
     var placeholderEn = field.get("placeholder_en") || "";
     var placeholderEs = field.get("placeholder_es") || "";
+
+    React.useImperativeHandle(ref, function () {
+      return {
+        isValid: function () {
+          if (!required) return true;
+          var en = value.en && value.en.trim();
+          var es = value.es && value.es.trim();
+          if (!en && !es) {
+            return {
+              error: {
+                message: "English and Spanish translations are required.",
+              },
+            };
+          }
+          if (!en) {
+            return { error: { message: "English translation is required." } };
+          }
+          if (!es) {
+            return { error: { message: "Spanish translation is required." } };
+          }
+          return true;
+        },
+      };
+    });
 
     function setLang(lang, text) {
       var next = Object.assign({}, value);
@@ -54,10 +86,12 @@
     }
 
     function renderInput(lang, placeholder) {
+      var missing = required && !(value[lang] && value[lang].trim());
+      var cls = "maph-input" + (missing ? " is-missing" : "");
       if (variant === "text") {
         return html`
           <textarea
-            class="maph-input maph-bilingual-textarea"
+            class=${cls + " maph-bilingual-textarea"}
             rows="3"
             placeholder=${placeholder}
             value=${value[lang] || ""}
@@ -69,7 +103,7 @@
       }
       return html`
         <input
-          class="maph-input"
+          class=${cls}
           type="text"
           placeholder=${placeholder}
           value=${value[lang] || ""}
@@ -92,7 +126,7 @@
         </div>
       </div>
     `;
-  }
+  });
 
   // Preview: both languages, labelled. Rendered on the entry preview pane.
   function BilingualPreview(props) {
@@ -205,9 +239,46 @@
     5: "last",
   };
 
-  function ScheduleControl(props) {
+  var ScheduleControl = React.forwardRef(function ScheduleControl(props, ref) {
     var value = toPlain(props.value) || {};
     var onChange = props.onChange;
+
+    React.useImperativeHandle(ref, function () {
+      return {
+        isValid: function () {
+          if (!value.kind) {
+            return { error: { message: "Pick a schedule type." } };
+          }
+          if (value.kind === "one-off" && !value.date) {
+            return {
+              error: { message: "One-time events need a date." },
+            };
+          }
+          if (value.kind === "recurring") {
+            var weekly = value.weekly || [];
+            var monthly = value.monthly || [];
+            if (weekly.length === 0 && monthly.length === 0) {
+              return {
+                error: {
+                  message: "Add at least one weekly or monthly slot.",
+                },
+              };
+            }
+            var slots = weekly.length ? weekly : monthly;
+            for (var i = 0; i < slots.length; i++) {
+              if (!slots[i].start_time || !slots[i].end_time) {
+                return {
+                  error: {
+                    message: "Each slot needs a start and end time.",
+                  },
+                };
+              }
+            }
+          }
+          return true;
+        },
+      };
+    });
 
     function setKind(kind) {
       // Wipe irrelevant fields when switching kinds so we never ship
@@ -264,7 +335,7 @@
           : null}
       </div>
     `;
-  }
+  });
 
   function ByAppointmentFields(p) {
     var note = p.value.note || {};
@@ -666,9 +737,52 @@
       .join(", ");
   }
 
-  function LocationControl(props) {
+  var LocationControl = React.forwardRef(function LocationControl(props, ref) {
     var value = toPlain(props.value) || {};
     var onChange = props.onChange;
+
+    React.useImperativeHandle(ref, function () {
+      return {
+        isValid: function () {
+          if (!value.address_1 || !value.address_1.trim()) {
+            return { error: { message: "Street address is required." } };
+          }
+          if (!value.city || !value.city.trim()) {
+            return { error: { message: "City is required." } };
+          }
+          if (!value.zip_code || !/^\d{5}(-\d{4})?$/.test(value.zip_code)) {
+            return {
+              error: { message: "ZIP must be 5 digits or ZIP+4." },
+            };
+          }
+          if (
+            typeof value.lat !== "number" ||
+            typeof value.lng !== "number"
+          ) {
+            return {
+              error: {
+                message:
+                  'Click "Find on map" to look up coordinates before saving.',
+              },
+            };
+          }
+          if (
+            value.lat < BBOX.latMin ||
+            value.lat > BBOX.latMax ||
+            value.lng < BBOX.lngMin ||
+            value.lng > BBOX.lngMax
+          ) {
+            return {
+              error: {
+                message:
+                  "Coordinates are outside the Greater Phoenix metro.",
+              },
+            };
+          }
+          return true;
+        },
+      };
+    });
 
     var stateHook = React.useState({
       candidates: [],
@@ -931,7 +1045,7 @@
           : null}
       </div>
     `;
-  }
+  });
 
   function MapPreview(p) {
     // OpenStreetMap embed — dependency-free map preview. A small bounding

@@ -75,6 +75,13 @@
   background: #fef2f2;
 }
 
+/* Shown on required bilingual inputs while empty. Subtle amber hint that
+   darkens to red when Decap surfaces a validation error. */
+.maph-input.is-missing {
+  border-color: #f59e0b;
+  background: #fffbeb;
+}
+
 .maph-input-time {
   font-variant-numeric: tabular-nums;
   max-width: 10rem;
@@ -565,3 +572,23 @@
   border-radius: 4px;
   font-family: ui-monospace, SFMono-Regular, Menlo, monospace;
 }
+
+/* ---------------------------------------------------------------
+   Decap toolbar overrides — widen the Publish dropdown menu so
+   "Publish and Duplicate" / "Publish and Create New" labels don't
+   truncate at Decap's default 150px width.
+   --------------------------------------------------------------- */
+
+[class*="DropdownList"],
+[class*="StyledDropdown"],
+[class*="DropdownMenu"],
+div[role="menu"] {
+  min-width: 240px !important;
+}
+
+[class*="DropdownList"] button,
+[class*="DropdownMenu"] button,
+div[role="menu"] button {
+  white-space: nowrap;
+}
+
