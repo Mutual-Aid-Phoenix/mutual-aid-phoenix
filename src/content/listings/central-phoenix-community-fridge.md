@@ -25,12 +25,13 @@ resource_type:
 category:
   - food
 region: central-phoenix
-address_1: "1501 N Grand Ave"
-city: "Phoenix"
-state: "AZ"
-zip_code: "85007"
-lat: 33.4614
-lng: -112.0868
+location:
+  address_1: "1501 N Grand Ave"
+  city: "Phoenix"
+  state: "AZ"
+  zip_code: "85007"
+  lat: 33.4614
+  lng: -112.0868
 languages_spoken:
   - en
   - es

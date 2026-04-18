@@ -25,12 +25,13 @@ category:
   - clothing
   - hygiene
 region: south-phoenix
-address_1: "6400 S Central Ave"
-city: "Phoenix"
-state: "AZ"
-zip_code: "85042"
-lat: 33.3892
-lng: -112.0742
+location:
+  address_1: "6400 S Central Ave"
+  city: "Phoenix"
+  state: "AZ"
+  zip_code: "85042"
+  lat: 33.3892
+  lng: -112.0742
 languages_spoken:
   - en
   - es

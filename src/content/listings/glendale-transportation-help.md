@@ -25,12 +25,13 @@ resource_type:
 category:
   - transportation
 region: west-valley
-address_1: "5990 W Olive Ave"
-city: "Glendale"
-state: "AZ"
-zip_code: "85302"
-lat: 33.5676
-lng: -112.1871
+location:
+  address_1: "5990 W Olive Ave"
+  city: "Glendale"
+  state: "AZ"
+  zip_code: "85302"
+  lat: 33.5676
+  lng: -112.1871
 languages_spoken:
   - en
   - es

@@ -100,12 +100,13 @@ const totalCount = listings.length;
         const { data } = listing;
         const isStale =
           now - data.last_verified_date.getTime() > NINETY_DAYS_MS;
-        const mapsUrl = `https://www.google.com/maps/search/?api=1&query=${data.lat},${data.lng}`;
+        const { location } = data;
+        const mapsUrl = `https://www.google.com/maps/search/?api=1&query=${location.lat},${location.lng}`;
         const formatted = formatSchedule(data.schedule, locale);
         const addressLine = [
-          data.address_1,
-          data.address_2,
-          `${data.city}, ${data.state} ${data.zip_code}`,
+          location.address_1,
+          location.address_2,
+          `${location.city}, ${location.state} ${location.zip_code}`,
         ]
           .filter(Boolean)
           .join(", ");

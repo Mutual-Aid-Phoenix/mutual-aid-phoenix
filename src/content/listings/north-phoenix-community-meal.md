@@ -25,12 +25,13 @@ resource_type:
 category:
   - food
 region: north-phoenix
-address_1: "18220 N 30th Pl"
-city: "Phoenix"
-state: "AZ"
-zip_code: "85032"
-lat: 33.6537
-lng: -112.0264
+location:
+  address_1: "18220 N 30th Pl"
+  city: "Phoenix"
+  state: "AZ"
+  zip_code: "85032"
+  lat: 33.6537
+  lng: -112.0264
 languages_spoken:
   - en
 schedule:

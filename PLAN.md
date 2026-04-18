@@ -8,10 +8,10 @@ See [ANALYSIS.md](./ANALYSIS.md) for background on why each piece was chosen.
 
 ## What we're building
 
-A static, bilingual (EN/ES), accessibility-first website for discovering mutual aid resources across the Greater Phoenix metro. Pages: Home, Map View, List View, Contact, Accessibility Statement. Volunteer-editable via a browser-based CMS. Hosted on Cloudflare Pages' free tier, **deployed manually from a laptop via `wrangler` for v1**, with near-zero ongoing cost (~$0/year at launch — no custom domain for v1).
+A static, bilingual (EN/ES), accessibility-first website for discovering mutual aid resources across the Greater Phoenix metro. Pages: Home, Map View, List View, Contact. Volunteer-editable via a browser-based CMS. Hosted on Cloudflare Pages' free tier, **deployed manually from a laptop via `wrangler` for v1**, with near-zero ongoing cost (~$0/year at launch — no custom domain for v1).
 
 **In scope for v1:**
-- Home / Map View / List View / Contact / Accessibility Statement pages
+- Home / Map View / List View / Contact pages
 - English + Spanish
 - Decap CMS for volunteer editing
 - Contact form → GitHub Issue
@@ -19,7 +19,7 @@ A static, bilingual (EN/ES), accessibility-first website for discovering mutual 
 - Manual a11y pass (axe CLI + VoiceOver/NVDA) before launch; WCAG 2.2 AA target
 
 **Explicitly deferred (future iterations):**
-Custom domain, "open now" filter, geolocation sort, PWA/offline mode, additional languages, printable PDFs, heat-emergency banner, data export page, photo features, inline geocoding widget (custom Decap widget replacing the helper page), Cloudflare Access gate on `/admin/` for anonymous-volunteer flows.
+Custom domain, "open now" filter, geolocation sort, PWA/offline mode, additional languages, printable PDFs, heat-emergency banner, data export page, photo features, Cloudflare Access gate on `/admin/` for anonymous-volunteer flows.
 
 **Automation deferred (see "Deferred automation" at the bottom):** GitHub → Pages auto-deploys, monthly tile refresh cron, CI a11y/perf/link gates, Renovate/Dependabot. Everything is deployed by hand from laptop for v1.
 
@@ -52,7 +52,7 @@ Goal: define the data shape once, so every subsequent phase reads from it.
 
 - [x] Define an Astro Content Collection `listings/` with a Zod schema matching the shape in [DATA_MODEL.md](./DATA_MODEL.md). Store listings as Markdown files with YAML frontmatter under `src/content/listings/`.
 - [x] Encode the build-time invariants from DATA_MODEL.md as Zod refinements — including the Greater Phoenix metro bounding-box check on `lat`/`lng`, required `weekly` or `monthly` cadence when `schedule.kind === "recurring"`, and i18n completeness for every `*` field across launch locales. Slug uniqueness is guaranteed by the filesystem (slug = filename stem).
-- [x] Create `src/content/pages/` for editable page content (Home, Accessibility Statement) as Markdown with frontmatter. Structure: `src/content/pages/{locale}/{page-slug}.md`.
+- [x] Create `src/content/pages/` for editable page content (Home) as Markdown with frontmatter. Structure: `src/content/pages/{locale}/{page-slug}.md`.
 - [x] Create `src/i18n/en.json` and `src/i18n/es.json` for UI strings. Convention: **no hardcoded user-facing strings in `.astro` components** — everything routes through the translation files. A small `t(locale, key)` helper in `src/i18n/index.ts` resolves dotted keys and throws loudly on missing strings.
 - [x] Configure Astro i18n routing: `/en/…` and `/es/…`, default locale `en`, redirect `/` → `/en/` (meta-refresh for v1; HTTP 301 via Cloudflare Pages `_redirects` tracked in Deferred automation). `hreflang` tags (plus `x-default`) emitted from the base layout.
 - [x] Seed ~10 test listings covering all 5 regions, all 6 resource types, and all 4 `schedule.kind` variants (plus both weekly and monthly recurring branches). These are clearly fixtures — real verified listings come in Phase 8.
@@ -108,42 +108,49 @@ Goal: the headline discovery surface, with accessibility parity the reference si
 
 ## Phase 4 — Static pages
 
-Goal: round out the site with Home, Contact, and Accessibility Statement.
+Goal: round out the site with Home and Contact.
 
 - [x] **Home**: hero, mission statement, primary CTAs to Map + List. All copy pulled from `src/content/pages/home.md` + translation files so the CMS can edit it.
 - [x] **Contact**: form with Name (optional), Email (optional), Feedback (required), plus a Cloudflare Turnstile widget. Submits to a Pages Function (Phase 6).
-- [x] **Accessibility Statement**: Markdown page, mirrors the reference site's structure (WCAG 2.2 AA claim, implemented features, known limitations, contact path). Editable via CMS.
 - [x] **Shared layout**: header with nav + dark-mode toggle + **language switcher**; skip-to-main-content link; footer with internal + external resource links. All strings translated.
 
-**Exit criteria:** All five pages render in both locales. Language switcher preserves the current page when toggling.
+**Exit criteria:** All four pages render in both locales. Language switcher preserves the current page when toggling.
 
 ---
 
-## Phase 5 — Decap CMS + geocoding helper
+## Phase 5 — Decap CMS + custom widgets
 
-Goal: volunteers can add/edit listings and page content from a browser without touching code, and can geocode addresses without an API key.
+Goal: volunteers can add/edit listings and page content from a browser without touching code. Listing form is focused — no sea of optional fields, no copy-pasting coordinates between tabs.
+
+### Phase 5a — CMS scaffold (done)
 
 - [x] Create a GitHub OAuth App (GitHub → Settings → Developer settings → OAuth Apps). Callback URL: `https://mutual-aid-phoenix.pages.dev/api/auth/callback`. Client ID goes in `public/admin/config.yml`.
 - [x] Store the client secret: `pnpm wrangler pages secret put OAUTH_CLIENT_SECRET --project-name=mutual-aid-phoenix`.
-- [ ] Write the OAuth proxy at `functions/api/auth.ts` (+ `functions/api/auth/callback.ts`): redirects to GitHub's `authorize` endpoint, receives the code on callback, exchanges it for an access token using the client secret, and returns the token to the Decap popup via `postMessage`. ~30 lines.
-- [ ] Drop `public/admin/index.html` (loads Decap's JS from its CDN). `public/admin/config.yml` already landed with the backend block; collections + commit mode get filled in next.
-- [ ] In `config.yml`, define collections. **All collections commit direct-to-`main`** — no editorial workflow, no PR review. Fast iteration is the goal.
+- [x] Write the OAuth proxy at `functions/api/auth.ts` (+ `functions/api/auth/callback.ts`): redirects to GitHub's `authorize` endpoint, receives the code on callback, exchanges it for an access token using the client secret, and returns the token to the Decap popup via `postMessage`. ~30 lines.
+- [x] Drop `public/admin/index.html` (loads Decap's JS from its CDN). `public/admin/config.yml` already landed with the backend block.
+- [x] In `config.yml`, define collections. **All collections commit direct-to-`main`** — no editorial workflow, no PR review. Fast iteration is the goal.
   - **Listings** — maps to `src/content/listings/`, form fields mirror the Zod schema.
-  - **Pages** — Home and Accessibility Statement.
-  - **Translations** — `src/i18n/*.json`, with Decap's i18n mode enabled for per-locale editing.
-- [ ] `pnpm ship`; verify the OAuth flow end-to-end: visit `/admin/`, sign in with GitHub, open and save a listing.
-- [ ] **Build the geocoding helper page** at `public/admin/geocode.html`:
-  - [ ] Plain HTML/JS, no framework. Linked from the Decap admin UI and from CONTRIBUTING.md.
-  - [ ] Address input field.
-  - [ ] Calls Nominatim (`https://nominatim.openstreetmap.org/search?format=jsonv2&limit=5&q=<address>`), respecting the 1 req/sec usage policy and setting an identifying Referer.
-  - [ ] Renders the top candidates as a list; clicking one drops a pin on a small MapLibre preview (reuses our R2 tiles).
-  - [ ] Displays the validated `lat`, `lng` values ready to copy into the Decap listing form.
-  - [ ] Fallback affordance: a "I'll enter coords manually" field so editors can paste in lat/lng from any source (Google Maps right-click, GPS reading, etc.).
-  - Future upgrade path: reimplement as an inline custom widget via `CMS.registerWidget`. Noted in CONTRIBUTING.md as a wanted enhancement; out of scope for v1.
-- [ ] Test with a secondary GitHub account (not an owner) to confirm the full volunteer experience: sign in → add a new listing → use geocode helper → paste coords → save → commit lands on `main`. **Note:** until we wire up GitHub→Pages auto-deploys (deferred), someone with deploy access still needs to `pnpm ship` for volunteer edits to go live.
-- [ ] Write `CONTRIBUTING.md` documenting: how to get access, the listings schema, moderation expectations, the geocode helper workflow, the manual tile refresh, the manual deploy step, and the note that Decap's config must stay in sync with the Zod schema.
+  - **Pages** — Home.
+  - **Translations** — `src/i18n/*.json`.
+- [x] `pnpm ship`; verify the OAuth flow end-to-end: visit `/admin/`, sign in with GitHub, open and save a page.
 
-**Exit criteria:** A non-owner volunteer can sign in, create a new listing (including geocoding its address via the helper), and save — the commit lands directly on `main`. A maintainer's `pnpm ship` publishes the change. The bbox check catches bad coordinates at build time.
+### Phase 5b — Listing form UX (custom widgets)
+
+Goal: a volunteer can add a new listing without being overwhelmed by optional fields or bouncing between tabs to geocode an address. The default Decap config is flat and uniform; we're going to make it conditional and guided.
+
+- [x] **Widget infrastructure** — load React from CDN + `htm` (tiny tagged-template JSX alternative, no bundler) alongside `decap-cms-app.js` (externalized-React bundle, to avoid dual React) in `public/admin/index.html`. Widgets live in `public/admin/custom-widgets.js` + `.css`.
+- [x] **`ScheduleWidget`** — registered with `CMS.registerWidget("schedule", …)`. Renders the Kind select first (always-open / by-appointment / one-off / recurring) and only shows the sub-fields matching that kind. Recurring asks "weekly or monthly?" and requires at least one slot; weekly slot editor uses a day dropdown. Outputs exactly the discriminated-union shape the Zod schema expects.
+- [x] **`LocationWidget`** — registered with `CMS.registerWidget("location", …)`. Single widget that owns the `location` object (address_1, address_2, city, state, zip_code, lat, lng). "Find on map" button calls Nominatim (`format=jsonv2`, 1 req/sec cap), shows the top ≤5 candidates, renders an OpenStreetMap embed as the map preview, and surfaces the bbox check inline (✓ inside metro / ✗ outside). **Schema change:** location fields are now nested under `location` in the listing frontmatter to match the widget's output shape.
+- [x] **Form polish** in `config.yml`: tightened `languages_spoken` to a multi-select of common codes (en, es, vi, zh, tl, ar, so, fr, nv). `contact` is collapsed by default.
+- [x] Retired the `schedule`/address/coord flat fields from `config.yml`.
+- [x] `pnpm ship`; deployed — ready for end-to-end click-through test: conditional fields hide/show correctly, geocode lookup + map preview work, save writes the expected shape, build passes.
+
+### Phase 5c — Close out
+
+- [ ] Test with a secondary GitHub account (not an owner) to confirm the full volunteer experience: sign in → add a new listing → use the LocationWidget geocode → save → commit lands on `main`. **Note:** until we wire up GitHub→Pages auto-deploys (deferred), someone with deploy access still needs to `pnpm ship` for volunteer edits to go live.
+- [ ] Write `CONTRIBUTING.md` documenting: how to get access, the listings schema, moderation expectations, the widget workflow, the manual tile refresh, the manual deploy step, and the note that Decap's config + custom widgets must stay in sync with the Zod schema.
+
+**Exit criteria:** A non-owner volunteer can sign in, create a new listing (address geocoded inline, schedule fields conditional on kind), and save — the commit lands directly on `main`. A maintainer's `pnpm ship` publishes the change. The bbox check catches bad coordinates at build time; the widgets catch them in the browser before save.
 
 ---
 
@@ -218,8 +225,8 @@ Pick these up after v1 is live. None are launch-blockers — each replaces manua
 | 1 | Zod schema, i18n config, seed listings, translation files |
 | 2 | List view page with filters + Pagefind search |
 | 3 | `.pmtiles` in R2 (uploaded manually), MapLibre map page with a11y fallbacks |
-| 4 | Home, Contact, Accessibility Statement, shared layout + language switcher |
-| 5 | OAuth App, Decap at `/admin/`, `functions/api/auth.ts`, geocode helper, CONTRIBUTING.md |
+| 4 | Home, Contact, shared layout + language switcher |
+| 5 | OAuth App, Decap at `/admin/`, `functions/api/auth.ts`, custom Schedule + Location widgets, CONTRIBUTING.md |
 | 6 | GitHub App, `functions/api/contact.ts`, Turnstile integration |
 | 7 | Manual a11y/perf/link checks signed off; Analytics + UptimeRobot wired |
 | 8 | Real listings, translations reviewed, docs, soft + public launch |

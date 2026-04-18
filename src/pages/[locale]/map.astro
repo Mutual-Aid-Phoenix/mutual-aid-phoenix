@@ -27,10 +27,11 @@ const features = listings.map((listing) => {
     formatted.kind === "text"
       ? formatted.text
       : formatted.rows.map((r) => `${r.label} ${r.time}`).join(" · ");
+  const { location } = data;
   const address = [
-    data.address_1,
-    data.address_2,
-    `${data.city}, ${data.state} ${data.zip_code}`,
+    location.address_1,
+    location.address_2,
+    `${location.city}, ${location.state} ${location.zip_code}`,
   ]
     .filter(Boolean)
     .join(", ");
@@ -43,11 +44,11 @@ const features = listings.map((listing) => {
     aria_label: pinLabelTemplate
       .replace("{type}", primaryTypeLabel)
       .replace("{name}", name),
-    lat: data.lat,
-    lng: data.lng,
+    lat: location.lat,
+    lng: location.lng,
     hours: hoursText,
     address,
-    maps_url: `https://www.google.com/maps/search/?api=1&query=${data.lat},${data.lng}`,
+    maps_url: `https://www.google.com/maps/search/?api=1&query=${location.lat},${location.lng}`,
     list_anchor: `/${locale}/list/#listing-${listing.id}-heading`,
   };
 });

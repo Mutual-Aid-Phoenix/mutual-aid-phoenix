@@ -26,12 +26,13 @@ category:
   - hygiene
   - clothing
 region: east-valley
-address_1: "6111 S All America Way"
-city: "Tempe"
-state: "AZ"
-zip_code: "85283"
-lat: 33.3663
-lng: -111.9369
+location:
+  address_1: "6111 S All America Way"
+  city: "Tempe"
+  state: "AZ"
+  zip_code: "85283"
+  lat: 33.3663
+  lng: -111.9369
 languages_spoken:
   - en
   - es

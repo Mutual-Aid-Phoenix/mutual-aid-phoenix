@@ -1,5 +1,4 @@
 ---
-locale: en
 title: Mutual Aid in Phoenix
 description: Find mutual aid resources across the Greater Phoenix metro —
   community fridges, free meals, harm reduction, and more.

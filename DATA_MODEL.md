@@ -32,15 +32,17 @@ Notation:
 
 ### Location
 
+Nested under `location` in the frontmatter so the Decap "location" custom widget (one-click geocode + map preview) owns the full flow from a single field.
+
 | Field | Type | Notes |
 |---|---|---|
-| `address_1` | string | Street address. |
-| `address_2`? | string | Suite / unit / landmark. |
-| `city` | string | |
-| `state` | string | 2-letter code. Default `AZ`. |
-| `zip_code` | string | **String, not number** — preserves leading zeros, supports ZIP+4 (`85001-1234`). |
-| `lat` | number | Required. Written once by the geocoding helper; see DECISIONS.md. |
-| `lng` | number | Required. Build fails if outside the Greater Phoenix metro bounding box. |
+| `location.address_1` | string | Street address. |
+| `location.address_2`? | string | Suite / unit / landmark. |
+| `location.city` | string | |
+| `location.state` | string | 2-letter code. Default `AZ`. |
+| `location.zip_code` | string | **String, not number** — preserves leading zeros, supports ZIP+4 (`85001-1234`). |
+| `location.lat` | number | Required. Written by the geocoding widget in Decap. |
+| `location.lng` | number | Required. Build fails if outside the Greater Phoenix metro bounding box. |
 
 ### Access
 
@@ -108,7 +110,6 @@ schedule:
 | Field | Type | Notes |
 |---|---|---|
 | `last_verified_date` | date | ISO `YYYY-MM-DD`. Drives the "stale >90 days" visual treatment and the "verify this" prompt. |
-| `source_url`? | string | Where the listing data originated — partner org's site, news article, volunteer's own page. |
 
 ---
 
@@ -131,7 +132,7 @@ A listing's slug is its Markdown filename (without extension), not a frontmatter
 
 ## Invariants enforced at build time
 
-- `lat` and `lng` are required and must fall inside the Greater Phoenix metro bounding box (per DECISIONS.md).
+- `location.lat` and `location.lng` are required and must fall inside the Greater Phoenix metro bounding box (per DECISIONS.md).
 - `schedule.kind === "one-off"` requires `date`.
 - `schedule.kind === "recurring"` requires exactly one of `weekly` or `monthly` with at least one entry.
 - If `schedule.kind === "recurring"` and both `start_date` and `end_date` are set, `start_date <= end_date`.

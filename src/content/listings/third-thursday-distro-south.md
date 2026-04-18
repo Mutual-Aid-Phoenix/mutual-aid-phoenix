@@ -24,12 +24,13 @@ category:
   - food
   - hygiene
 region: south-phoenix
-address_1: "5140 W Baseline Rd"
-city: "Laveen"
-state: "AZ"
-zip_code: "85339"
-lat: 33.3779
-lng: -112.1742
+location:
+  address_1: "5140 W Baseline Rd"
+  city: "Laveen"
+  state: "AZ"
+  zip_code: "85339"
+  lat: 33.3779
+  lng: -112.1742
 languages_spoken:
   - en
   - es

@@ -25,12 +25,13 @@ resource_type:
 category:
   - food
 region: east-valley
-address_1: "800 E Apache Blvd"
-city: "Tempe"
-state: "AZ"
-zip_code: "85281"
-lat: 33.4147
-lng: -111.9248
+location:
+  address_1: "800 E Apache Blvd"
+  city: "Tempe"
+  state: "AZ"
+  zip_code: "85281"
+  lat: 33.4147
+  lng: -111.9248
 languages_spoken:
   - en
   - es

@@ -25,12 +25,13 @@ resource_type:
 category:
   - medical
 region: east-valley
-address_1: "7220 E Main St"
-city: "Mesa"
-state: "AZ"
-zip_code: "85207"
-lat: 33.4152
-lng: -111.7109
+location:
+  address_1: "7220 E Main St"
+  city: "Mesa"
+  state: "AZ"
+  zip_code: "85207"
+  lat: 33.4152
+  lng: -111.7109
 languages_spoken:
   - en
   - es

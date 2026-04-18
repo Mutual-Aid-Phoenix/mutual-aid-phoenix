@@ -7,8 +7,7 @@
     "home": "Home",
     "map": "Map",
     "list": "List",
-    "contact": "Contact",
-    "accessibility": "Accessibility"
+    "contact": "Contact"
   },
   "chrome": {
     "skip_to_content": "Skip to main content",
@@ -106,9 +105,6 @@
     "issues_fallback": "Open a GitHub issue",
     "backend_pending_notice": "The contact form backend is still being built. In the meantime please open a GitHub issue.",
     "required_hint": "Fields marked required must be filled in."
-  },
-  "accessibility_page": {
-    "heading": "Accessibility"
   },
   "footer": {
     "site_heading": "Mutual Aid in Phoenix",

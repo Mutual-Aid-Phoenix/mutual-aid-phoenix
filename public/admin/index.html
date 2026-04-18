@@ -6,13 +6,45 @@
     <meta name="robots" content="noindex,nofollow" />
     <title>Content Manager — Mutual Aid in Phoenix</title>
     <link rel="icon" href="/favicon.svg" />
+    <link rel="stylesheet" href="/admin/custom-widgets.css" />
   </head>
   <body>
     <!--
-      Decap CMS is loaded from its CDN. It reads configuration from
-      config.yml in this same directory. OAuth flows through our
-      Pages Function at /api/auth (see functions/api/auth.ts).
+      Decap is split across two UMD bundles: `decap-cms.js` bundles React
+      internally, while `decap-cms-app.js` externalizes React. We use the
+      latter so our custom widgets share the same React instance — a
+      mismatch would break hook state and context between Decap and our
+      widget components.
+
+      Version pinning: React 19 (used by decap-cms-app 3.7+) dropped UMD
+      builds, so we can't load it directly from unpkg without a bundler.
+      We pin decap-cms-app to 3.6.0, the last version with a React 18
+      peer dep — React 18.3.1 still ships `/umd/*.production.min.js`.
+      Revisit if we want 3.7+ features and are willing to add a build step.
     -->
-    <script src="https://unpkg.com/decap-cms@^3.8.0/dist/decap-cms.js"></script>
+    <script
+      src="https://unpkg.com/react@18.3.1/umd/react.production.min.js"
+      crossorigin
+    ></script>
+    <script
+      src="https://unpkg.com/react-dom@18.3.1/umd/react-dom.production.min.js"
+      crossorigin
+    ></script>
+    <script src="https://unpkg.com/decap-cms-app@3.6.0/dist/decap-cms-app.js"></script>
+    <!-- htm gives us JSX-like tagged templates without a build step. -->
+    <script src="https://unpkg.com/htm@3.1.1/dist/htm.umd.js"></script>
+    <!--
+      decap-cms-app exposes its UMD global as `DecapCmsApp`, not `CMS`.
+      Alias it before widgets.js loads so our widget code (and anyone
+      familiar with the classic `window.CMS.registerWidget(...)` pattern)
+      works unchanged.
+    -->
+    <script>
+      window.CMS = window.DecapCmsApp;
+    </script>
+    <script src="/admin/custom-widgets.js"></script>
+    <script>
+      window.CMS.init();
+    </script>
   </body>
 </html>

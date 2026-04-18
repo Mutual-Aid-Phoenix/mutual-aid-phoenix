@@ -26,12 +26,13 @@ category:
   - harm-reduction
   - medical
 region: west-valley
-address_1: "9200 W Peoria Ave"
-city: "Peoria"
-state: "AZ"
-zip_code: "85345"
-lat: 33.5812
-lng: -112.2566
+location:
+  address_1: "9200 W Peoria Ave"
+  city: "Peoria"
+  state: "AZ"
+  zip_code: "85345"
+  lat: 33.5812
+  lng: -112.2566
 languages_spoken:
   - en
   - es

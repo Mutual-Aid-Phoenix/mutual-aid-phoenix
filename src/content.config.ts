@@ -125,6 +125,20 @@ const contact = z.object({
   url: z.string().url().optional(),
 });
 
+// Location is grouped into a nested object so the Decap "location" widget
+// (public/admin/custom-widgets.js) can own the full address + coords flow
+// from a single form field.
+const location = z.object({
+  address_1: z.string().min(1),
+  address_2: z.string().optional(),
+  city: z.string().min(1),
+  state: z.string().length(2).default("AZ"),
+  // String, not number — preserves leading zeros and supports ZIP+4.
+  zip_code: z.string().regex(/^\d{5}(-\d{4})?$/, "ZIP must be 5 digits or ZIP+4"),
+  lat: z.number(),
+  lng: z.number(),
+});
+
 const listings = defineCollection({
   loader: glob({ pattern: "**/*.{md,yml,yaml}", base: "./src/content/listings" }),
   schema: z
@@ -146,14 +160,7 @@ const listings = defineCollection({
       seasons: z.array(season).optional(),
 
       // Location
-      address_1: z.string().min(1),
-      address_2: z.string().optional(),
-      city: z.string().min(1),
-      state: z.string().length(2).default("AZ"),
-      // String, not number — preserves leading zeros and supports ZIP+4.
-      zip_code: z.string().regex(/^\d{5}(-\d{4})?$/, "ZIP must be 5 digits or ZIP+4"),
-      lat: z.number(),
-      lng: z.number(),
+      location,
 
       // Access
       languages_spoken: z.array(z.string().length(2)),
@@ -164,17 +171,16 @@ const listings = defineCollection({
 
       // Provenance & freshness
       last_verified_date: z.date(),
-      source_url: z.string().url().optional(),
     })
     .refine(
-      ({ lat, lng }) =>
-        lat >= PHOENIX_METRO_BBOX.lat_min &&
-        lat <= PHOENIX_METRO_BBOX.lat_max &&
-        lng >= PHOENIX_METRO_BBOX.lng_min &&
-        lng <= PHOENIX_METRO_BBOX.lng_max,
+      ({ location }) =>
+        location.lat >= PHOENIX_METRO_BBOX.lat_min &&
+        location.lat <= PHOENIX_METRO_BBOX.lat_max &&
+        location.lng >= PHOENIX_METRO_BBOX.lng_min &&
+        location.lng <= PHOENIX_METRO_BBOX.lng_max,
       {
         message: `Coordinates are outside the Greater Phoenix metro bounding box (lat ${PHOENIX_METRO_BBOX.lat_min}–${PHOENIX_METRO_BBOX.lat_max}, lng ${PHOENIX_METRO_BBOX.lng_min}–${PHOENIX_METRO_BBOX.lng_max})`,
-        path: ["lat"],
+        path: ["location", "lat"],
       },
     )
     .refine(({ last_verified_date }) => last_verified_date <= new Date(), {

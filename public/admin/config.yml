@@ -1,12 +1,19 @@
 # Decap CMS configuration — loaded by /admin/index.html.
 #
 # Kept in sync with the Zod schema at src/content.config.ts (for
-# listings and pages) and the i18n JSON files at src/i18n/*.json.
+# listings and pages). UI translations in src/i18n/*.json are edited
+# directly in the repo for v1 — not exposed as a Decap collection.
 # When a field changes, update both places in the same PR.
 #
 # All collections commit direct-to-`main` (see DECISIONS.md). There is
 # no editorial workflow — the Zod schema validates at build time and
 # `git revert` is always available if a bad commit lands.
+#
+# Custom widgets live in public/admin/custom-widgets.js:
+#   - bilingual  — EN/ES paired inputs (no nested card).
+#   - heading    — section divider (saves nothing to frontmatter).
+#   - schedule   — conditional schedule form.
+#   - location   — address + geocode + map preview.
 
 backend:
   name: github
@@ -35,73 +42,97 @@ collections:
   # -------------------------------------------------------------------
   # Listings — the main volunteer workflow.
   # Fields mirror the Zod schema in src/content.config.ts. Bilingual
-  # fields are modeled as object widgets with `en` + `es` sub-fields,
-  # not Decap's native i18n (our frontmatter shape doesn't match
-  # Decap's single_file i18n storage).
+  # fields use the custom `bilingual` widget which writes `{en, es}`.
   # -------------------------------------------------------------------
   - name: listings
     label: Listings
     label_singular: Listing
     description: >
       Mutual aid resources — community fridges, distros, free tables,
-      meals, resource centers, and more. Fields marked bilingual need
-      both an English and Spanish translation. Coordinates must fall
-      inside the Greater Phoenix metro bounding box or the build will
-      fail.
+      meals, resource centers, and more. Fields without "(Optional)"
+      are required. Bilingual fields need both an English and Spanish
+      translation. Coordinates must fall inside the Greater Phoenix
+      metro bounding box or the build will fail.
     folder: src/content/listings
     create: true
     delete: true
     slug: "{{slug}}"
     extension: md
     format: yaml-frontmatter
-    summary: "{{name.en}} ({{resource_type}})"
+    # Preview pane adds little value here — our custom widgets already
+    # give inline formatted feedback (map, schedule sentences, coord
+    # badge). Volunteers can pull the published site up in another tab
+    # to see the real card. Turning off also removes a class of React
+    # version warnings from the Decap preview renderer.
+    editor:
+      preview: false
+    # `summary` is the primary (bold) title shown in the list view.
+    # `summary_fields` adds compact secondary lines beneath it.
+    summary: "{{name.en}}"
+    summary_fields:
+      - region
+      - resource_type
+      - last_verified_date
     sortable_fields:
       - last_verified_date
-      - city
     fields:
-      # Identity & copy (bilingual)
-      - label: "Name (bilingual)"
+      # ---------------------------------------------------------------
+      # SECTION: Name & Description
+      # ---------------------------------------------------------------
+      - label: "Name & Description"
+        name: _section_naming
+        widget: heading
+        required: false
+        description: >
+          The public-facing copy volunteers see on the site.
+
+      - label: "Name"
         name: name
-        widget: object
-        fields:
-          - { label: English, name: en, widget: string }
-          - { label: Español, name: es, widget: string }
-      - label: "Location name (bilingual)"
+        widget: bilingual
+        variant: string
+        placeholder_en: e.g., Roosevelt Community Fridge
+        placeholder_es: ej., Nevera Comunitaria Roosevelt
+
+      - label: "Location name"
         name: location_name
+        widget: bilingual
+        variant: string
         hint: >
           Short name for the spot itself — e.g., "Roosevelt Library",
           "Corner of 7th Ave & Van Buren". Shown beneath the name.
-        widget: object
-        fields:
-          - { label: English, name: en, widget: string }
-          - { label: Español, name: es, widget: string }
-      - label: "Description (bilingual)"
+
+      - label: "Description"
         name: description
-        widget: object
-        fields:
-          - { label: English, name: en, widget: text }
-          - { label: Español, name: es, widget: text }
-      - label: "Barriers to entry (bilingual)"
+        widget: bilingual
+        variant: text
+
+      - label: "Barriers to entry"
         name: barriers_to_entry
+        widget: bilingual
+        variant: text
         hint: >
           Any requirement to receive resources here — ID, sign-in,
           eligibility questions, etc. Write "None" if there are none.
-        widget: object
-        fields:
-          - { label: English, name: en, widget: text }
-          - { label: Español, name: es, widget: text }
-      - label: "Accessibility notes (bilingual)"
+
+      - label: "Accessibility notes"
         name: accessibility_notes
+        widget: bilingual
+        variant: text
         hint: >
           Wheelchair access, restroom availability, step-free entry,
           etc. Be concrete — "Step-free entry, accessible restroom on
           site" beats "accessible".
-        widget: object
-        fields:
-          - { label: English, name: en, widget: text }
-          - { label: Español, name: es, widget: text }
 
-      # Classification
+      # ---------------------------------------------------------------
+      # SECTION: Details — classification enums.
+      # ---------------------------------------------------------------
+      - label: "Details"
+        name: _section_details
+        widget: heading
+        required: false
+        description: >
+          How this resource is categorized and where it lives.
+
       - label: Resource type
         name: resource_type
         widget: select
@@ -137,9 +168,10 @@ collections:
           - { label: South Phoenix, value: south-phoenix }
           - { label: East Valley, value: east-valley }
           - { label: West Valley, value: west-valley }
-      - label: Seasons (optional — only if seasonal)
+      - label: Seasons
         name: seasons
         required: false
+        hint: Only fill in if the resource is seasonal (e.g., summer cooling center, winter shelter).
         widget: select
         multiple: true
         options:
@@ -148,40 +180,69 @@ collections:
           - { label: Fall, value: fall }
           - { label: Winter, value: winter }
 
-      # Location
-      - { label: "Address line 1", name: address_1, widget: string }
-      - { label: "Address line 2 (optional)", name: address_2, widget: string, required: false }
-      - { label: City, name: city, widget: string }
-      - { label: State, name: state, widget: string, default: AZ, pattern: ["^[A-Z]{2}$", "Two-letter state code"] }
-      - { label: ZIP code, name: zip_code, widget: string, pattern: ['^\d{5}(-\d{4})?$', "5 digits or ZIP+4"] }
-      - label: Latitude
-        name: lat
-        widget: number
-        value_type: float
-        step: 0.000001
-        hint: >
-          Decimal degrees — e.g., 33.4484. Use the geocoding helper at
-          /admin/geocode.html if you don't have coordinates yet.
-      - label: Longitude
-        name: lng
-        widget: number
-        value_type: float
-        step: 0.000001
-        hint: >
-          Decimal degrees — e.g., -112.0740. Must be negative in
-          Arizona.
+      # ---------------------------------------------------------------
+      # SECTION: Location
+      # ---------------------------------------------------------------
+      - label: "Location"
+        name: _section_location
+        widget: heading
+        required: false
+        description: >
+          Fill in the street address and ZIP, then click
+          "Find on map" to look up the coordinates. Verify the pin
+          on the map preview before saving.
 
-      # Access
+      - label: Address & map
+        name: location
+        widget: location
+
+      # ---------------------------------------------------------------
+      # SECTION: Schedule
+      # ---------------------------------------------------------------
+      - label: "Schedule"
+        name: _section_schedule
+        widget: heading
+        required: false
+        description: >
+          Pick a schedule type first — the form will show only the
+          fields that apply (dates for one-off events, weekly/monthly
+          slots for recurring programs, etc.).
+
+      - label: Schedule
+        name: schedule
+        widget: schedule
+
+      # ---------------------------------------------------------------
+      # SECTION: Access & Verification
+      # Languages, contact, and the freshness timestamp.
+      # ---------------------------------------------------------------
+      - label: "Access & Verification"
+        name: _section_access
+        widget: heading
+        required: false
+        description: >
+          Who can communicate here, how to reach them, and when this
+          listing was last confirmed.
+
       - label: Languages spoken
         name: languages_spoken
-        widget: list
-        summary: "{{fields.code}}"
-        field:
-          label: "Language code (ISO 639-1, 2 letters)"
-          name: code
-          widget: string
-          pattern: ["^[a-z]{2}$", "Two lowercase letters"]
-      - label: "Contact (optional)"
+        widget: select
+        multiple: true
+        min: 1
+        hint: >
+          Languages staff/volunteers can converse in on-site. Used to
+          drive the list-view language filter.
+        options:
+          - { label: "English (en)", value: en }
+          - { label: "Español (es)", value: es }
+          - { label: "Tiếng Việt (vi)", value: vi }
+          - { label: "中文 (zh)", value: zh }
+          - { label: "Tagalog (tl)", value: tl }
+          - { label: "العربية (ar)", value: ar }
+          - { label: "Soomaali (so)", value: so }
+          - { label: "Français (fr)", value: fr }
+          - { label: "Diné bizaad / Navajo (nv)", value: nv }
+      - label: "Contact"
         name: contact
         required: false
         widget: object
@@ -190,90 +251,6 @@ collections:
           - { label: Phone, name: phone, widget: string, required: false }
           - { label: Email, name: email, widget: string, required: false }
           - { label: URL, name: url, widget: string, required: false }
-
-      # Schedule — one of: always-open, by-appointment, one-off, recurring.
-      # Fill in only the fields that match the chosen kind; the build
-      # validates the combination.
-      - label: Schedule
-        name: schedule
-        widget: object
-        fields:
-          - label: Kind
-            name: kind
-            widget: select
-            options:
-              - { label: Always open, value: always-open }
-              - { label: By appointment, value: by-appointment }
-              - { label: One-time event, value: one-off }
-              - { label: Recurring, value: recurring }
-          - label: "By-appointment note (bilingual, optional)"
-            name: note
-            required: false
-            widget: object
-            collapsed: true
-            fields:
-              - { label: English, name: en, widget: string, required: false }
-              - { label: Español, name: es, widget: string, required: false }
-          - label: "One-off date"
-            name: date
-            required: false
-            widget: datetime
-            date_format: "YYYY-MM-DD"
-            time_format: false
-          - label: "One-off start time (HH:MM, 24-hour, optional)"
-            name: start_time
-            required: false
-            widget: string
-            pattern: ['^([01]\d|2[0-3]):[0-5]\d$', "HH:MM 24-hour"]
-          - label: "One-off end time (HH:MM, 24-hour, optional)"
-            name: end_time
-            required: false
-            widget: string
-            pattern: ['^([01]\d|2[0-3]):[0-5]\d$', "HH:MM 24-hour"]
-          - label: "Recurring — start date (optional)"
-            name: start_date
-            required: false
-            widget: datetime
-            date_format: "YYYY-MM-DD"
-            time_format: false
-          - label: "Recurring — end date (optional)"
-            name: end_date
-            required: false
-            widget: datetime
-            date_format: "YYYY-MM-DD"
-            time_format: false
-          - label: "Recurring — weekly slots"
-            name: weekly
-            required: false
-            widget: list
-            summary: "{{fields.day}} {{fields.start_time}}–{{fields.end_time}}"
-            fields:
-              - label: Day
-                name: day
-                widget: select
-                options: [mon, tue, wed, thu, fri, sat, sun]
-              - { label: Start time (HH:MM), name: start_time, widget: string, pattern: ['^([01]\d|2[0-3]):[0-5]\d$', "HH:MM 24-hour"] }
-              - { label: End time (HH:MM), name: end_time, widget: string, pattern: ['^([01]\d|2[0-3]):[0-5]\d$', "HH:MM 24-hour"] }
-          - label: "Recurring — monthly slots"
-            name: monthly
-            required: false
-            widget: list
-            summary: "Week {{fields.week}} — {{fields.day}} {{fields.start_time}}–{{fields.end_time}}"
-            fields:
-              - label: "Week of month (1–5; 5 = last)"
-                name: week
-                widget: number
-                value_type: int
-                min: 1
-                max: 5
-              - label: Day
-                name: day
-                widget: select
-                options: [mon, tue, wed, thu, fri, sat, sun]
-              - { label: Start time (HH:MM), name: start_time, widget: string, pattern: ['^([01]\d|2[0-3]):[0-5]\d$', "HH:MM 24-hour"] }
-              - { label: End time (HH:MM), name: end_time, widget: string, pattern: ['^([01]\d|2[0-3]):[0-5]\d$', "HH:MM 24-hour"] }
-
-      # Provenance & freshness
       - label: Last verified date
         name: last_verified_date
         widget: datetime
@@ -283,10 +260,13 @@ collections:
           The date you last confirmed this resource is still operating
           as described. Listings older than 90 days show a "Needs
           verification" badge.
-      - { label: "Source URL (optional)", name: source_url, widget: string, required: false }
 
   # -------------------------------------------------------------------
-  # Pages — Home + Accessibility Statement, one entry per (page × locale).
+  # Pages — one entry per (page × locale).
+  # Modeled as a files-collection (not folder) so each locale variant is
+  # its own explicit entry. Locale lives only in the file path; there is
+  # no `locale` frontmatter field. Adding a new page means adding a new
+  # entry here and a matching file under src/content/pages/{locale}/.
   # -------------------------------------------------------------------
   - name: pages
     label: Pages
@@ -294,36 +274,20 @@ collections:
     description: >
       Long-form page content. One entry per page per language. Edit
       the English version and its Spanish counterpart separately.
-    folder: src/content/pages
-    create: false
-    delete: false
-    slug: "{{slug}}"
-    extension: md
-    format: frontmatter
-    # Store files under {locale}/{page}.md. The "path" template preserves
-    # that structure when Decap commits.
-    path: "{{locale}}/{{slug}}"
-    fields:
-      - { label: Locale, name: locale, widget: select, options: [en, es] }
-      - { label: Title, name: title, widget: string }
-      - { label: Description, name: description, widget: string, required: false }
-      - { label: Last updated, name: last_updated, widget: datetime, date_format: "YYYY-MM-DD", time_format: false, required: false }
-      - { label: Body, name: body, widget: markdown }
-
-  # -------------------------------------------------------------------
-  # Translations — UI strings in src/i18n/*.json. Edited as raw JSON
-  # for v1; a friendlier editor is a future enhancement.
-  # -------------------------------------------------------------------
-  - name: translations
-    label: UI Translations
     files:
-      - label: English
-        name: en
-        file: src/i18n/en.json
-        fields:
-          - { label: "JSON content", name: body, widget: code, default_language: json, output_code_only: true }
-      - label: Español
-        name: es
-        file: src/i18n/es.json
-        fields:
-          - { label: "JSON content", name: body, widget: code, default_language: json, output_code_only: true }
+      - label: "Home — English"
+        name: home_en
+        file: src/content/pages/en/home.md
+        format: frontmatter
+        extension: md
+        fields: &page_fields
+          - { label: Title, name: title, widget: string }
+          - { label: Description, name: description, widget: string, required: false }
+          - { label: Last updated, name: last_updated, widget: datetime, date_format: "YYYY-MM-DD", time_format: false, required: false }
+          - { label: Body, name: body, widget: markdown }
+      - label: "Home — Español"
+        name: home_es
+        file: src/content/pages/es/home.md
+        format: frontmatter
+        extension: md
+        fields: *page_fields

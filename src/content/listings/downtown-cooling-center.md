@@ -28,12 +28,13 @@ category:
 region: central-phoenix
 seasons:
   - summer
-address_1: "1221 N Central Ave"
-city: "Phoenix"
-state: "AZ"
-zip_code: "85004"
-lat: 33.4697
-lng: -112.0737
+location:
+  address_1: "1221 N Central Ave"
+  city: "Phoenix"
+  state: "AZ"
+  zip_code: "85004"
+  lat: 33.4697
+  lng: -112.0737
 languages_spoken:
   - en
   - es
