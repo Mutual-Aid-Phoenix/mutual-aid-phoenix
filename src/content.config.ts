@@ -150,8 +150,8 @@ const listings = defineCollection({
       name: i18nString,
       location_name: i18nString,
       description: i18nString,
-      barriers_to_entry: i18nString,
-      accessibility_notes: i18nString,
+      barriers_to_entry: i18nString.optional(),
+      accessibility_notes: i18nString.optional(),
 
       // Classification
       resource_type: z.array(resourceType).min(1),
@@ -163,7 +163,7 @@ const listings = defineCollection({
       location,
 
       // Access
-      languages_spoken: z.array(z.string().length(2)),
+      languages_spoken: z.array(z.string().length(2)).optional(),
       contact: contact.optional(),
 
       // Schedule

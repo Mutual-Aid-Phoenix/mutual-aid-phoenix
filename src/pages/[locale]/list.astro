@@ -171,17 +171,21 @@ const totalCount = listings.length;
                   </dd>
                 </div>
 
-                <div class="fact">
-                  <dt>{t(locale, "listing.barriers_to_entry")}</dt>
-                  <dd>{data.barriers_to_entry[locale]}</dd>
-                </div>
+                {data.barriers_to_entry && (
+                  <div class="fact">
+                    <dt>{t(locale, "listing.barriers_to_entry")}</dt>
+                    <dd>{data.barriers_to_entry[locale]}</dd>
+                  </div>
+                )}
 
-                <div class="fact">
-                  <dt>{t(locale, "listing.accessibility_notes")}</dt>
-                  <dd>{data.accessibility_notes[locale]}</dd>
-                </div>
+                {data.accessibility_notes && (
+                  <div class="fact">
+                    <dt>{t(locale, "listing.accessibility_notes")}</dt>
+                    <dd>{data.accessibility_notes[locale]}</dd>
+                  </div>
+                )}
 
-                {data.languages_spoken.length > 0 && (
+                {data.languages_spoken && data.languages_spoken.length > 0 && (
                   <div class="fact">
                     <dt>{t(locale, "listing.languages_spoken")}</dt>
                     <dd>

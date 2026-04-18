@@ -56,7 +56,13 @@ collections:
     folder: src/content/listings
     create: true
     delete: true
-    slug: "{{slug}}"
+    # The slug becomes the filename. Point at the English name so new
+    # listings land at paths like `roosevelt-community-fridge.md`.
+    # `{{slug}}` alone would look for a literal `slug` field (we don't
+    # have one) and fall back to concatenating every field's stringified
+    # value — with all our object-shaped fields that produced multi-line
+    # filenames full of `object-object` segments.
+    slug: "{{fields.name.en}}"
     extension: md
     format: yaml-frontmatter
     # Preview pane adds little value here — our custom widgets already
@@ -93,35 +99,10 @@ collections:
         placeholder_en: e.g., Roosevelt Community Fridge
         placeholder_es: ej., Nevera Comunitaria Roosevelt
 
-      - label: "Location name"
-        name: location_name
-        widget: bilingual
-        variant: string
-        hint: >
-          Short name for the spot itself — e.g., "Roosevelt Library",
-          "Corner of 7th Ave & Van Buren". Shown beneath the name.
-
       - label: "Description"
         name: description
         widget: bilingual
         variant: text
-
-      - label: "Barriers to entry"
-        name: barriers_to_entry
-        widget: bilingual
-        variant: text
-        hint: >
-          Any requirement to receive resources here — ID, sign-in,
-          eligibility questions, etc. Write "None" if there are none.
-
-      - label: "Accessibility notes"
-        name: accessibility_notes
-        widget: bilingual
-        variant: text
-        hint: >
-          Wheelchair access, restroom availability, step-free entry,
-          etc. Be concrete — "Step-free entry, accessible restroom on
-          site" beats "accessible".
 
       # ---------------------------------------------------------------
       # SECTION: Details — classification enums.
@@ -192,6 +173,14 @@ collections:
           "Find on map" to look up the coordinates. Verify the pin
           on the map preview before saving.
 
+      - label: "Location name"
+        name: location_name
+        widget: bilingual
+        variant: string
+        hint: >
+          Short name for the spot itself — e.g., "Roosevelt Library",
+          "Corner of 7th Ave & Van Buren". Shown beneath the listing name.
+
       - label: Address & map
         name: location
         widget: location
@@ -213,25 +202,44 @@ collections:
         widget: schedule
 
       # ---------------------------------------------------------------
-      # SECTION: Access & Verification
-      # Languages, contact, and the freshness timestamp.
+      # SECTION: Additional Details
+      # Access notes, languages, contact, and the freshness timestamp.
       # ---------------------------------------------------------------
-      - label: "Access & Verification"
+      - label: "Additional Details"
         name: _section_access
         widget: heading
         required: false
         description: >
-          Who can communicate here, how to reach them, and when this
-          listing was last confirmed.
+          Access notes, who can communicate here, how to reach them,
+          and when this listing was last confirmed.
+
+      - label: "Barriers to entry"
+        name: barriers_to_entry
+        widget: bilingual
+        variant: text
+        required: false
+        hint: >
+          Any requirement to receive resources here — ID, sign-in,
+          eligibility questions, etc. Leave blank if there are none.
+
+      - label: "Accessibility notes"
+        name: accessibility_notes
+        widget: bilingual
+        variant: text
+        required: false
+        hint: >
+          Wheelchair access, restroom availability, step-free entry,
+          etc. Be concrete — "Step-free entry, accessible restroom on
+          site" beats "accessible".
 
       - label: Languages spoken
         name: languages_spoken
         widget: select
         multiple: true
-        min: 1
+        required: false
         hint: >
           Languages staff/volunteers can converse in on-site. Used to
-          drive the list-view language filter.
+          drive the list-view language filter. Leave blank if unknown.
         options:
           - { label: "English (en)", value: en }
           - { label: "Español (es)", value: es }
