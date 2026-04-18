@@ -21,7 +21,7 @@ A static, bilingual (EN/ES), accessibility-first website for discovering mutual 
 **Explicitly deferred (future iterations):**
 Custom domain, "open now" filter, geolocation sort, PWA/offline mode, additional languages, printable PDFs, heat-emergency banner, data export page, photo features, Cloudflare Access gate on `/admin/` for anonymous-volunteer flows.
 
-**Automation deferred (see "Deferred automation" at the bottom):** GitHub → Pages auto-deploys, monthly tile refresh cron, CI a11y/perf/link gates, Renovate/Dependabot. Everything is deployed by hand from laptop for v1.
+**Automation deferred (see "Deferred automation" at the bottom):** monthly tile refresh cron, CI a11y/perf/link gates, Renovate/Dependabot, PR preview deploys.
 
 ---
 
@@ -147,8 +147,8 @@ Goal: a volunteer can add a new listing without being overwhelmed by optional fi
 
 ### Phase 5c — Close out
 
-- [ ] Test with a secondary GitHub account (not an owner) to confirm the full volunteer experience: sign in → add a new listing → use the LocationWidget geocode → save → commit lands on `main`. **Note:** until we wire up GitHub→Pages auto-deploys (deferred), someone with deploy access still needs to `pnpm ship` for volunteer edits to go live.
-- [ ] Write `CONTRIBUTING.md` documenting: how to get access, the listings schema, moderation expectations, the widget workflow, the manual tile refresh, the manual deploy step, and the note that Decap's config + custom widgets must stay in sync with the Zod schema.
+- [x] Test with a secondary GitHub account (not an owner) to confirm the full volunteer experience: sign in → add a new listing → use the LocationWidget geocode → save → commit lands on `main`.
+- [x] Write `CONTRIBUTING.md` documenting: how to get access, the listings schema, moderation expectations, the widget workflow, the manual tile refresh, the manual deploy step, and the note that Decap's config + custom widgets must stay in sync with the Zod schema.
 
 **Exit criteria:** A non-owner volunteer can sign in, create a new listing (address geocoded inline, schedule fields conditional on kind), and save — the commit lands directly on `main`. A maintainer's `pnpm ship` publishes the change. The bbox check catches bad coordinates at build time; the widgets catch them in the browser before save.
 
@@ -208,12 +208,12 @@ Goal: go from "it works" to "real people can rely on it."
 
 Pick these up after v1 is live. None are launch-blockers — each replaces manual work with CI.
 
-- **Repo → CF Pages GitHub integration** — auto-deploys on push to `main` plus preview URLs per PR. Replaces `pnpm ship`. This is the natural first thing to turn on once volunteer editing is active, since otherwise a maintainer has to redeploy for every Decap commit to go live.
+- ~~**Repo → CF Pages auto-deploy**~~ — **done.** `.github/workflows/deploy.yml` builds + deploys to Cloudflare Pages (static assets + Pages Functions) on every push to `main`. No PR preview URLs — intentionally scoped small for v1.
 - **`.github/workflows/refresh-tiles.yml`** — monthly cron that downloads Protomaps, runs `pmtiles extract`, uploads to R2, retains the previous version under a dated key. Opens an `ops`-labeled Issue on failure.
 - **`.github/workflows/ci.yml`** — axe-core + Playwright, Lighthouse CI, lychee link check on PRs.
 - **Pa11y weekly audit** — posts results to a GitHub Issue trend thread.
 - **Renovate (or Dependabot)** — weekly dependency updates.
-- **Upgrade `/` → `/en/` redirect to a proper HTTP 301** via a `public/_redirects` file (`/` → `/en/` with status `301`). Astro currently generates a meta-refresh HTML page at `/`, which works on any host but is slightly slower and less SEO-friendly than a real redirect. Cloudflare Pages reads Netlify-style `_redirects` natively, so this is a one-file change.
+- ~~**Upgrade `/` → `/en/` redirect to a proper HTTP 301**~~ — **done.** `public/_redirects` ships a `/` → `/en/` 301 that CF Pages applies before hitting static files. Astro's meta-refresh is kept only for local dev.
 
 ---
 
@@ -240,7 +240,7 @@ Pick these up after v1 is live. None are launch-blockers — each replaces manua
 
 ## Risks to watch
 
-- **Manual deploy + Decap commits.** Until the GitHub→Pages integration is turned on (deferred), Decap volunteer edits create commits but don't auto-publish — a maintainer has to `pnpm ship`. Fine for pre-launch (the user is the only editor); becomes annoying once volunteers are active. Expect to promote the Pages integration from "deferred" to "done" soon after Phase 5.
+- ~~**Manual deploy + Decap commits.**~~ Resolved — `.github/workflows/deploy.yml` auto-deploys on push to `main`, so Decap volunteer commits go live without a maintainer running `pnpm ship`.
 - **Protomaps tile extraction complexity.** First time through, budget a half-day. If it becomes a maintenance burden, swap to MapTiler free tier (no code change, just config).
 - **Spanish translation quality.** Machine translation is off the table for a trust-critical site. Line up a native-speaker reviewer before Phase 8.
 - **Listings going stale.** The `last_verified_date` field + the "report a problem" contact path are the mitigations; sustained volunteer stewardship is the real answer.

@@ -1,0 +1,11 @@
+# Cloudflare Pages redirects. Netlify-style; read natively by CF Pages.
+# Docs: https://developers.cloudflare.com/pages/configuration/redirects/
+#
+# These rules run before the static asset server, so they override
+# whatever Astro emits at the same path.
+
+# Proper 301 for the locale-less root. Astro still generates a
+# meta-refresh index.html at / (via `redirects` in astro.config.mjs),
+# which keeps local `pnpm dev` useful, but in prod this rule wins and
+# sends a real 301 to /en/ — faster and SEO-friendly.
+/    /en/    301

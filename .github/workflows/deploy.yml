@@ -1,0 +1,49 @@
+# Deploy to Cloudflare Pages on every push to main.
+#
+# Replaces the manual `pnpm ship` flow for v1 — volunteer edits committed
+# by Decap CMS now go live without a maintainer re-deploying from their
+# laptop. The `functions/` directory is picked up automatically by
+# `wrangler pages deploy`, so this publishes both the static site and
+# the Pages Functions in one step.
+#
+# Required secrets (set via GitHub repo settings → Secrets → Actions):
+#   - CLOUDFLARE_API_TOKEN  — token with "Cloudflare Pages: Edit"
+#                             permission, scoped to this account.
+#   - CLOUDFLARE_ACCOUNT_ID — the Cloudflare account ID (dashboard URL
+#                             or `wrangler whoami`).
+
+name: Deploy
+
+on:
+  push:
+    branches: [main]
+  workflow_dispatch:
+
+concurrency:
+  group: deploy-pages
+  cancel-in-progress: false
+
+jobs:
+  deploy:
+    runs-on: ubuntu-latest
+    steps:
+      - uses: actions/checkout@v4
+
+      - uses: pnpm/action-setup@v4
+        with:
+          version: 10
+
+      - uses: actions/setup-node@v4
+        with:
+          node-version: 22
+          cache: pnpm
+
+      - run: pnpm install --frozen-lockfile
+
+      - run: pnpm build
+
+      - uses: cloudflare/wrangler-action@v3
+        with:
+          apiToken: ${{ secrets.CLOUDFLARE_API_TOKEN }}
+          accountId: ${{ secrets.CLOUDFLARE_ACCOUNT_ID }}
+          command: pages deploy ./dist --project-name=mutual-aid-phoenix --branch=main
