@@ -7,10 +7,16 @@
 # the Pages Functions in one step.
 #
 # Required secrets (set via GitHub repo settings → Secrets → Actions):
-#   - CLOUDFLARE_API_TOKEN  — token with "Cloudflare Pages: Edit"
-#                             permission, scoped to this account.
-#   - CLOUDFLARE_ACCOUNT_ID — the Cloudflare account ID (dashboard URL
-#                             or `wrangler whoami`).
+#   - CLOUDFLARE_API_TOKEN        — token with "Cloudflare Pages: Edit"
+#                                   permission, scoped to this account.
+#   - CLOUDFLARE_ACCOUNT_ID       — the Cloudflare account ID (dashboard URL
+#                                   or `wrangler whoami`).
+#   - PUBLIC_TURNSTILE_SITE_KEY   — the Turnstile *site* key (public; baked
+#                                   into the built HTML). Needed at build
+#                                   time so the contact form renders the
+#                                   Turnstile widget. Runtime secrets
+#                                   (RESEND_API_KEY, TURNSTILE_SECRET) are
+#                                   stored on Cloudflare Pages, not here.
 
 name: Deploy
 
@@ -41,6 +47,8 @@ jobs:
       - run: pnpm install --frozen-lockfile
 
       - run: pnpm build
+        env:
+          PUBLIC_TURNSTILE_SITE_KEY: ${{ secrets.PUBLIC_TURNSTILE_SITE_KEY }}
 
       - uses: cloudflare/wrangler-action@v3
         with:
