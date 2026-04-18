@@ -135,6 +135,9 @@ const totalCount = listings.length;
                 {data.category.map((c) => (
                   <li class="tag tag-category">{t(locale, `category.${c}`)}</li>
                 ))}
+                {data.seasons?.map((s) => (
+                  <li class="tag tag-season">{t(locale, `season.${s}`)}</li>
+                ))}
               </ul>
 
               <p class="description">{data.description[locale]}</p>
@@ -205,6 +208,43 @@ const totalCount = listings.length;
                     </dd>
                   </div>
                 )}
+
+                {data.contact &&
+                  (data.contact.phone ||
+                    data.contact.email ||
+                    data.contact.url) && (
+                    <div class="fact">
+                      <dt>{t(locale, "listing.contact_label")}</dt>
+                      <dd>
+                        <ul role="list" class="contact-rows">
+                          {data.contact.phone && (
+                            <li>
+                              <span class="contact-label">
+                                {t(locale, "listing.contact_phone")}:
+                              </span>{" "}
+                              <span>{data.contact.phone}</span>
+                            </li>
+                          )}
+                          {data.contact.email && (
+                            <li>
+                              <span class="contact-label">
+                                {t(locale, "listing.contact_email")}:
+                              </span>{" "}
+                              <span>{data.contact.email}</span>
+                            </li>
+                          )}
+                          {data.contact.url && (
+                            <li>
+                              <span class="contact-label">
+                                {t(locale, "listing.contact_website")}:
+                              </span>{" "}
+                              <span>{data.contact.url}</span>
+                            </li>
+                          )}
+                        </ul>
+                      </dd>
+                    </div>
+                  )}
               </dl>
 
               <p class="verified">
@@ -549,6 +589,22 @@ const totalCount = listings.length;
 
   .tag-category {
     background: var(--tag-category);
+  }
+
+  .tag-season {
+    background: var(--tag-season);
+  }
+
+  .contact-rows {
+    list-style: none;
+    padding: 0;
+    margin: 0;
+    display: grid;
+    gap: 0.125rem;
+  }
+
+  .contact-label {
+    font-weight: 500;
   }
 
   .description {

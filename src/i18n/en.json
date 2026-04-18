@@ -43,6 +43,12 @@
     "shelter": "Shelter",
     "other": "Other"
   },
+  "season": {
+    "spring": "Spring",
+    "summer": "Summer",
+    "fall": "Fall",
+    "winter": "Winter"
+  },
   "day_short": {
     "mon": "Mon",
     "tue": "Tue",
@@ -66,6 +72,10 @@
     "barriers_to_entry": "Requirements",
     "accessibility_notes": "Accessibility",
     "languages_spoken": "Languages spoken",
+    "contact_label": "Contact",
+    "contact_phone": "Phone",
+    "contact_email": "Email",
+    "contact_website": "Website",
     "stale_badge": "Needs verification"
   },
   "list": {

@@ -43,6 +43,12 @@
     "shelter": "Refugio",
     "other": "Otro"
   },
+  "season": {
+    "spring": "Primavera",
+    "summer": "Verano",
+    "fall": "Otoño",
+    "winter": "Invierno"
+  },
   "day_short": {
     "mon": "Lun",
     "tue": "Mar",
@@ -66,6 +72,10 @@
     "barriers_to_entry": "Requisitos",
     "accessibility_notes": "Accesibilidad",
     "languages_spoken": "Idiomas hablados",
+    "contact_label": "Contacto",
+    "contact_phone": "Teléfono",
+    "contact_email": "Correo",
+    "contact_website": "Sitio web",
     "stale_badge": "Requiere verificación"
   },
   "list": {
