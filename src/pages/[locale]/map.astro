@@ -23,10 +23,12 @@ const features = listings.map((listing) => {
   const primaryTypeLabel = t(locale, `resource_type.${primaryType}`);
   const name = data.name[locale];
   const formatted = formatSchedule(data.schedule, locale);
+  // Recurring schedules: one row per line. The popup `<dd>` uses
+  // `white-space: pre-line` so the embedded newlines render as line breaks.
   const hoursText =
     formatted.kind === "text"
       ? formatted.text
-      : formatted.rows.map((r) => `${r.label} ${r.time}`).join(" · ");
+      : formatted.rows.map((r) => `${r.label} ${r.time}`).join("\n");
   const { location } = data;
   const address = [
     location.address_1,
@@ -402,6 +404,9 @@ const listUrl = `/${locale}/list/`;
 
   .listing-popup dd {
     margin: 0;
+    /* Recurring schedules embed `\n` between rows so each weekday lands on
+       its own line instead of wrapping mid-row. */
+    white-space: pre-line;
   }
 
   .listing-popup .popup-see-details {
