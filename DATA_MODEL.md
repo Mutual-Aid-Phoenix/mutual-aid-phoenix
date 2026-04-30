@@ -105,6 +105,8 @@ schedule:
 
 `week: 5` means "last week of the month." The structured shape (not a free-text string) is what enables a future "open now" filter without re-entering data.
 
+For optional date fields (`start_date`, `end_date`), both an absent key and an explicit `null` mean "not set" — Decap serializes cleared widget values as `null`, and the schema accepts either.
+
 ### Provenance & freshness
 
 | Field | Type | Notes |

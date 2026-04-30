@@ -1,6 +1,6 @@
 import en from "./en.json";
 import es from "./es.json";
-import { LOCALES, type Locale } from "../content.config";
+import { LOCALES, type Locale } from "../lib/schema";
 
 // Every locale must have exactly the same key shape; `en` is the canonical
 // structure and `es` is type-checked against it.

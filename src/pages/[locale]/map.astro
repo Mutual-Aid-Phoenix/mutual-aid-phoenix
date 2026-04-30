@@ -2,7 +2,7 @@
 import { getCollection } from "astro:content";
 import BaseLayout from "../../layouts/BaseLayout.astro";
 import { LOCALES, t, type Locale } from "../../i18n";
-import { RESOURCE_TYPES } from "../../content.config";
+import { RESOURCE_TYPES } from "../../lib/schema";
 import { formatSchedule } from "../../lib/format-schedule";
 
 export async function getStaticPaths() {

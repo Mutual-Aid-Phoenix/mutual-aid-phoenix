@@ -2,6 +2,9 @@
 dist/
 # generated types
 .astro/
+# admin bundle (built from src/admin/custom-widgets.tsx via vite.admin.config.ts)
+public/admin/custom-widgets.js
+public/admin/custom-widgets.js.map
 # wrangler local state
 .wrangler/
 
