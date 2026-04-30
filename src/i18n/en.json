@@ -132,6 +132,7 @@
     "legend_label": "Legend",
     "close_popup": "Close",
     "see_full_details": "See full details in list",
+    "read_more": "Read more",
     "pin_label": "{type} — {name}",
     "noscript_fallback": "The interactive map requires JavaScript. You can browse every resource on the list view.",
     "tile_error": "The map failed to load. You can browse every resource on the list view."

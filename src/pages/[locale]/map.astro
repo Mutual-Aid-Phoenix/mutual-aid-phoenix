@@ -17,6 +17,17 @@ const listings = await getCollection("listings");
 // needs to position markers and stamp HTML into popups.
 const pinLabelTemplate = t(locale, "map.pin_label");
 
+// Cap popup descriptions so a long entry doesn't blow out the popup height.
+// Truncate on a word boundary when possible; full text remains on the list page.
+const POPUP_DESC_MAX = 160;
+const truncate = (s: string, max: number): { text: string; truncated: boolean } => {
+  if (s.length <= max) return { text: s, truncated: false };
+  const slice = s.slice(0, max);
+  const lastSpace = slice.lastIndexOf(" ");
+  const cut = lastSpace > max * 0.6 ? slice.slice(0, lastSpace) : slice;
+  return { text: `${cut.trimEnd()}…`, truncated: true };
+};
+
 const features = listings.map((listing) => {
   const { data } = listing;
   const primaryType = data.resource_type[0];
@@ -37,11 +48,13 @@ const features = listings.map((listing) => {
   ]
     .filter(Boolean)
     .join(", ");
+  const desc = truncate(data.description[locale], POPUP_DESC_MAX);
 
   return {
     id: listing.id,
     name,
-    description: data.description[locale],
+    description: desc.text,
+    description_truncated: desc.truncated,
     primary_type: primaryType,
     aria_label: pinLabelTemplate
       .replace("{type}", primaryTypeLabel)
@@ -60,6 +73,7 @@ const strings = {
   address: t(locale, "listing.address_label"),
   directions: t(locale, "listing.get_directions"),
   see_details: t(locale, "map.see_full_details"),
+  read_more: t(locale, "map.read_more"),
   close: t(locale, "map.close_popup"),
   tile_error: t(locale, "map.tile_error"),
 };
@@ -165,6 +179,7 @@ const listUrl = `/${locale}/list/`;
     id: string;
     name: string;
     description: string;
+    description_truncated: boolean;
     primary_type: string;
     aria_label: string;
     lat: number;
@@ -180,6 +195,7 @@ const listUrl = `/${locale}/list/`;
     address: string;
     directions: string;
     see_details: string;
+    read_more: string;
     close: string;
     tile_error: string;
   };
@@ -260,10 +276,14 @@ const listUrl = `/${locale}/list/`;
               : "&#39;",
     );
 
-  const buildPopupHtml = (f: Feature) => `
+  const buildPopupHtml = (f: Feature) => {
+    const readMoreLink = f.description_truncated
+      ? ` <a class="popup-read-more" href="${escape(f.list_anchor)}">${escape(strings.read_more)}</a>`
+      : "";
+    return `
     <article class="listing-popup">
       <h3>${escape(f.name)}</h3>
-      <p class="popup-desc">${escape(f.description)}</p>
+      <p class="popup-desc">${escape(f.description)}${readMoreLink}</p>
       <dl>
         <dt>${escape(strings.hours)}</dt>
         <dd>${escape(f.hours)}</dd>
@@ -273,6 +293,7 @@ const listUrl = `/${locale}/list/`;
       <a class="popup-see-details" href="${escape(f.list_anchor)}">${escape(strings.see_details)} →</a>
     </article>
   `;
+  };
 
   // Focus-trap a popup: Tab cycles inside, Shift+Tab wraps back, Esc closes
   // and returns focus to the marker button that opened it.
@@ -387,6 +408,12 @@ const listUrl = `/${locale}/list/`;
     margin: 0 0 0.625rem;
     font-size: 0.875rem;
     line-height: 1.4;
+    white-space: pre-line;
+  }
+
+  .listing-popup .popup-read-more {
+    font-weight: 600;
+    white-space: nowrap;
   }
 
   .listing-popup dl {

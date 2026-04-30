@@ -610,6 +610,10 @@ const totalCount = listings.length;
   .description {
     margin: 0.5rem 0 0.75rem;
     line-height: 1.5;
+    /* Preserve paragraph breaks the editor wrote in the YAML description
+       (YAML `>-` folds single newlines into spaces but keeps blank-line
+       separators as `\n\n`). */
+    white-space: pre-line;
   }
 
   .listing-facts {

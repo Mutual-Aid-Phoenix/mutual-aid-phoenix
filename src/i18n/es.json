@@ -132,6 +132,7 @@
     "legend_label": "Leyenda",
     "close_popup": "Cerrar",
     "see_full_details": "Ver detalles completos en la lista",
+    "read_more": "Leer más",
     "pin_label": "{type} — {name}",
     "noscript_fallback": "El mapa interactivo requiere JavaScript. Puedes explorar todos los recursos en la vista de lista.",
     "tile_error": "No se pudo cargar el mapa. Puedes explorar todos los recursos en la vista de lista."
