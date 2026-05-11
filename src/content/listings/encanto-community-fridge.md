@@ -21,6 +21,28 @@ location:
   lat: 33.4733379
   lng: -112.0833241
 schedule:
-  kind: always-open
-last_verified_date: 2026-05-07
+  kind: recurring
+  weekly:
+    - day: sun
+      start_time: 07:00
+      end_time: 19:00
+    - day: mon
+      start_time: 07:00
+      end_time: 19:00
+    - day: tue
+      start_time: 07:00
+      end_time: 19:00
+    - day: wed
+      start_time: 07:00
+      end_time: 19:00
+    - day: thu
+      start_time: 07:00
+      end_time: 19:00
+    - day: fri
+      start_time: 07:00
+      end_time: 19:00
+    - day: sat
+      start_time: 07:00
+      end_time: 19:00
+last_verified_date: 2026-05-11
 ---
