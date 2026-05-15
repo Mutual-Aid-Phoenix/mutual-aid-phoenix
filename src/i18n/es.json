@@ -62,7 +62,8 @@
     "always-open": "Siempre abierto",
     "by-appointment": "Con cita previa",
     "one-off": "Evento único",
-    "recurring": "Recurrente"
+    "recurring": "Recurrente",
+    "every_day": "Todos los días"
   },
   "listing": {
     "last_verified": "Verificado por última vez",

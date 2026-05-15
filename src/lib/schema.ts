@@ -99,6 +99,11 @@ const monthlySlot = z.object({
   end_time: timeOfDay,
 });
 
+const dailySlot = z.object({
+  start_time: timeOfDay,
+  end_time: timeOfDay,
+});
+
 const scheduleAlwaysOpen = z.object({
   kind: z.literal("always-open"),
 });
@@ -124,10 +129,11 @@ const scheduleRecurring = z.object({
   kind: z.literal("recurring"),
   start_date: optionalDate,
   end_date: optionalDate,
-  // Exactly one of `weekly` or `monthly` must be provided — enforced in the
-  // top-level superRefine below.
+  // Exactly one of `weekly`, `monthly`, or `daily` must be provided —
+  // enforced in the top-level superRefine below.
   weekly: z.array(weeklySlot).optional(),
   monthly: z.array(monthlySlot).optional(),
+  daily: z.array(dailySlot).optional(),
 });
 
 const schedule = z.discriminatedUnion("kind", [
@@ -210,12 +216,14 @@ export const listingSchema = z
 
     const hasWeekly = (data.schedule.weekly?.length ?? 0) > 0;
     const hasMonthly = (data.schedule.monthly?.length ?? 0) > 0;
-    if (hasWeekly === hasMonthly) {
+    const hasDaily = (data.schedule.daily?.length ?? 0) > 0;
+    const populated = [hasWeekly, hasMonthly, hasDaily].filter(Boolean).length;
+    if (populated !== 1) {
       ctx.addIssue({
         code: z.ZodIssueCode.custom,
         path: ["schedule"],
         message:
-          "Recurring schedule must provide exactly one of `weekly` or `monthly` with at least one entry",
+          "Recurring schedule must provide exactly one of `weekly`, `monthly`, or `daily` with at least one entry",
       });
     }
 

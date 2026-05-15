@@ -62,7 +62,8 @@
     "always-open": "Always open",
     "by-appointment": "By appointment",
     "one-off": "One-time event",
-    "recurring": "Recurring"
+    "recurring": "Recurring",
+    "every_day": "Every day"
   },
   "listing": {
     "last_verified": "Last verified",

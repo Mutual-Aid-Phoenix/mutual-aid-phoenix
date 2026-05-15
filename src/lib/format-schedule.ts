@@ -49,8 +49,17 @@ export function formatSchedule(
           })),
         };
       }
-      // Schema guarantees one of weekly/monthly is populated — this branch
-      // should be unreachable. Surface an obvious marker if it isn't.
+      if (schedule.daily && schedule.daily.length > 0) {
+        return {
+          kind: "rows",
+          rows: schedule.daily.map((slot) => ({
+            label: t(locale, "schedule.every_day"),
+            time: `${formatTime(slot.start_time, locale)}–${formatTime(slot.end_time, locale)}`,
+          })),
+        };
+      }
+      // Schema guarantees one of weekly/monthly/daily is populated — this
+      // branch should be unreachable. Surface an obvious marker if it isn't.
       return { kind: "text", text: "—" };
     }
   }

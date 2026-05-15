@@ -105,6 +105,16 @@ schedule:
 
 `week: 5` means "last week of the month." The structured shape (not a free-text string) is what enables a future "open now" filter without re-entering data.
 
+Daily cadence — every day at the listed time(s). Use for programs that don't vary by day of week.
+
+```yaml
+schedule:
+  kind: recurring
+  daily:
+    - { start_time: "08:00", end_time: "10:00" }
+    - { start_time: "17:00", end_time: "19:00" }
+```
+
 For optional date fields (`start_date`, `end_date`), both an absent key and an explicit `null` mean "not set" — Decap serializes cleared widget values as `null`, and the schema accepts either.
 
 ### Provenance & freshness
@@ -136,7 +146,7 @@ A listing's slug is its Markdown filename (without extension), not a frontmatter
 
 - `location.lat` and `location.lng` are required and must fall inside the Greater Phoenix metro bounding box (per DECISIONS.md).
 - `schedule.kind === "one-off"` requires `date`.
-- `schedule.kind === "recurring"` requires exactly one of `weekly` or `monthly` with at least one entry.
+- `schedule.kind === "recurring"` requires exactly one of `weekly`, `monthly`, or `daily` with at least one entry.
 - If `schedule.kind === "recurring"` and both `start_date` and `end_date` are set, `start_date <= end_date`.
 - `resource_type` and `category` each have at least one value.
 - All `*` fields have entries for every launch locale (`en`, `es`).

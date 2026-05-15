@@ -247,6 +247,7 @@ const WEEK_LABELS: Record<number, string> = {
 
 type Slot = { day?: string; start_time?: string; end_time?: string };
 type MonthlySlotV = Slot & { week?: number };
+type DailySlotV = { start_time?: string; end_time?: string };
 
 type ScheduleValue = {
   kind?: string;
@@ -257,6 +258,7 @@ type ScheduleValue = {
   end_date?: string;
   weekly?: Slot[];
   monthly?: MonthlySlotV[];
+  daily?: DailySlotV[];
   note?: BilingualValue;
 };
 
@@ -287,14 +289,20 @@ const ScheduleControl = forwardRef<unknown, WidgetProps<ScheduleValue>>(
         if (value.kind === "recurring") {
           const weekly = value.weekly || [];
           const monthly = value.monthly || [];
-          if (weekly.length === 0 && monthly.length === 0) {
+          const daily = value.daily || [];
+          if (
+            weekly.length === 0 &&
+            monthly.length === 0 &&
+            daily.length === 0
+          ) {
             return {
               error: {
-                message: "Add at least one weekly or monthly slot.",
+                message: "Add at least one weekly, monthly, or daily slot.",
               },
             };
           }
-          const slots = weekly.length ? weekly : monthly;
+          const slots: { start_time?: string; end_time?: string }[] =
+            weekly.length ? weekly : monthly.length ? monthly : daily;
           for (let i = 0; i < slots.length; i++) {
             if (!slots[i].start_time || !slots[i].end_time) {
               return {
@@ -459,9 +467,14 @@ function RecurringFields(p: {
 }) {
   const hasWeekly = Array.isArray(p.value.weekly);
   const hasMonthly = Array.isArray(p.value.monthly);
-  const cadence = hasWeekly ? "weekly" : hasMonthly ? "monthly" : "weekly";
+  const hasDaily = Array.isArray(p.value.daily);
+  const cadence: "weekly" | "monthly" | "daily" = hasDaily
+    ? "daily"
+    : hasMonthly
+      ? "monthly"
+      : "weekly";
 
-  function switchCadence(next: "weekly" | "monthly") {
+  function switchCadence(next: "weekly" | "monthly" | "daily") {
     // Carry start/end dates only if they're set — leaving undefined here
     // would let Decap serialize them as `null` in YAML, which the build
     // schema accepts but is noisy in the file.
@@ -472,10 +485,12 @@ function RecurringFields(p: {
       base.weekly = p.value.weekly || [
         { day: "mon", start_time: "", end_time: "" },
       ];
-    } else {
+    } else if (next === "monthly") {
       base.monthly = p.value.monthly || [
         { week: 1, day: "mon", start_time: "", end_time: "" },
       ];
+    } else {
+      base.daily = p.value.daily || [{ start_time: "", end_time: "" }];
     }
     p.onChange(base);
   }
@@ -506,16 +521,32 @@ function RecurringFields(p: {
             <strong>Monthly</strong> — e.g., first Saturday of each month
           </span>
         </label>
+        <label className="maph-radio">
+          <input
+            type="radio"
+            name={"cadence-" + p.value.kind}
+            checked={cadence === "daily"}
+            onChange={() => switchCadence("daily")}
+          />
+          <span>
+            <strong>Daily</strong> — e.g., every day, 8–10am
+          </span>
+        </label>
       </div>
       {cadence === "weekly" ? (
         <WeeklySlots
           slots={p.value.weekly || []}
           setSlots={(slots) => p.patch({ weekly: slots })}
         />
-      ) : (
+      ) : cadence === "monthly" ? (
         <MonthlySlots
           slots={p.value.monthly || []}
           setSlots={(slots) => p.patch({ monthly: slots })}
+        />
+      ) : (
+        <DailySlots
+          slots={p.value.daily || []}
+          setSlots={(slots) => p.patch({ daily: slots })}
         />
       )}
       <details className="maph-details">
@@ -676,6 +707,55 @@ function MonthlySlots(p: {
               ))}
             </select>
           </div>
+          <TimeField
+            label="Start"
+            value={slot.start_time}
+            onChange={(t) => updateSlot(i, { start_time: t })}
+          />
+          <TimeField
+            label="End"
+            value={slot.end_time}
+            onChange={(t) => updateSlot(i, { end_time: t })}
+          />
+          <button
+            type="button"
+            className="maph-btn-icon"
+            aria-label="Remove slot"
+            onClick={() => removeSlot(i)}
+          >
+            ×
+          </button>
+        </div>
+      ))}
+      <button type="button" className="maph-btn-secondary" onClick={addSlot}>
+        + Add another slot
+      </button>
+    </div>
+  );
+}
+
+function DailySlots(p: {
+  slots: DailySlotV[];
+  setSlots: (s: DailySlotV[]) => void;
+}) {
+  function updateSlot(i: number, patch: Partial<DailySlotV>) {
+    const next = p.slots.slice();
+    next[i] = { ...next[i], ...patch };
+    p.setSlots(next);
+  }
+  function addSlot() {
+    p.setSlots(p.slots.concat([{ start_time: "", end_time: "" }]));
+  }
+  function removeSlot(i: number) {
+    const next = p.slots.slice();
+    next.splice(i, 1);
+    if (next.length === 0) next.push({ start_time: "", end_time: "" });
+    p.setSlots(next);
+  }
+  return (
+    <div className="maph-slots">
+      {p.slots.map((slot, i) => (
+        <div className="maph-slot" key={i}>
           <TimeField
             label="Start"
             value={slot.start_time}
@@ -1136,6 +1216,7 @@ function SchedulePreview(props: { value: any }) {
     const entries: string[] = [];
     const weekly = v.weekly || [];
     const monthly = v.monthly || [];
+    const daily = v.daily || [];
     weekly.forEach((s) => {
       const day = DAY_LABELS[s.day || ""] || s.day;
       const time = formatTimeRange(s.start_time, s.end_time);
@@ -1146,6 +1227,10 @@ function SchedulePreview(props: { value: any }) {
       const wk = WEEK_LABELS[s.week || 0] || s.week + "th";
       const time = formatTimeRange(s.start_time, s.end_time);
       entries.push(wk + " " + day + " of the month" + (time ? ", " + time : ""));
+    });
+    daily.forEach((s) => {
+      const time = formatTimeRange(s.start_time, s.end_time);
+      entries.push("Every day" + (time ? ", " + time : ""));
     });
     const dateRange =
       v.start_date || v.end_date
