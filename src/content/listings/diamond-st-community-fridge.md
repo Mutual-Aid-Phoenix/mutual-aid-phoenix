@@ -18,9 +18,9 @@ location:
   address_1: 1245 E Diamond St
   city: Phoenix
   zip_code: "85006"
-  lat: 33.4594894
-  lng: -112.0554341
+  lat: 33.45943470530544
+  lng: -112.05434578280895
 schedule:
   kind: always-open
-last_verified_date: 2026-05-07
+last_verified_date: 2026-06-09
 ---
